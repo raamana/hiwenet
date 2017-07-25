@@ -16,7 +16,7 @@ list_medpy_histogram_metrics = np.array([
     'quadratic_forms', 'relative_bin_deviation', 'relative_deviation'])
 
 
-def hiwenet(features, groups, weight_method='hist_int',
+def hiwenet(features, groups, weight_method='histogram_intersection',
             num_bins=100, trim_outliers=True, trim_percentile=0.05,
             return_networkx_graph=False):
     """
@@ -48,7 +48,7 @@ def hiwenet(features, groups, weight_method='hist_int',
         This is important to avoid numerical problems and also to stabilize the weight estimates.
     trim_percentile : float
         Small value specifying the percentile of outliers to trim.
-        Default: 0.05 (5%). Must be in open interval (0, 1).
+        Default: 5 (5%). Must be in open interval (0, 100).
     return_networkx_graph : bool
         Specifies the need for a networkx graph populated with weights computed.
 
@@ -56,7 +56,10 @@ def hiwenet(features, groups, weight_method='hist_int',
     -------
     edge_weights : numpy 1d array of pair-wise edge-weights. 
         Size: num_groups x num_groups, wherein num_groups is determined by the total number of unique values in groups.
-        This can be turned into a full matrix easily, if needed.
+        Only the upper triangular matrix is filled as the distance between node i and j would be the same as j and i.
+        The edge weights from the upper triangular matrix can easily be obtained by
+        weights_array = edge_weights[ np.triu_indices_from(edge_weights, 1) ]
+
 
     """
 
@@ -71,13 +74,13 @@ def hiwenet(features, groups, weight_method='hist_int',
     if np.isnan(num_bins) or np.isinf(num_bins):
         raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(min_num_bins))
 
-    if not isinstance(features, 'numpy.ndarray'):
+    if not isinstance(features, np.ndarray):
         features = np.array(features)
 
-    if not isinstance(groups, 'numpy.ndarray'):
+    if not isinstance(groups, np.ndarray):
         features = np.array(groups)
 
-    if trim_percentile < 0.0 or trim_percentile >= 1.0:
+    if trim_percentile < 0 or trim_percentile >= 100:
         raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
 
     if weight_method not in list_medpy_histogram_metrics:
@@ -86,24 +89,25 @@ def hiwenet(features, groups, weight_method='hist_int',
     # preprocess data
     if trim_outliers:
         # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
-        edges_of_edges = [np.percentile(features, trim_percentile),
-                          np.percentile(features, 1.0 - trim_percentile)]
+        edges_of_edges = np.array([ np.percentile(features, trim_percentile),
+                                    np.percentile(features, 100 - trim_percentile)])
     else:
         edges_of_edges = np.array([np.min(features), np.max(features)])
 
     # Edges computed using data from all groups, in order to establish correspondence
-    edges = np.linspace(edges_of_edges[1], edges_of_edges[2], num=num_bins, endpoint=True)
+    edges = np.linspace(edges_of_edges[0], edges_of_edges[1], num=num_bins, endpoint=True)
 
     # memberships
     group_ids, num_groups = identify_groups(groups)
+    num_links = np.int64(num_groups*(num_groups-1)/2.0)
 
     if return_networkx_graph:
-        edge_weights = nx.Graph()
-        edge_weights.add_nodes_from(np.arange(num_groups))
+        nx_graph = nx.Graph()
+        nx_graph.add_nodes_from(np.arange(num_groups))
     else:
-        edge_weights = np.empty([num_groups, num_groups])
+        edge_weights = np.zeros([num_groups, num_groups], order='F')
 
-    for g1 in num_groups:
+    for g1 in xrange(num_groups):
         # TODO indexing needs to be implemented with care
         index1 = groups == group_ids[g1]
         # compute histograms for each patch
@@ -116,17 +120,22 @@ def hiwenet(features, groups, weight_method='hist_int',
             edge_value = compute_edge_value(hist_one, hist_two, weight_method)
 
             if return_networkx_graph:
-                edge_weights.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
+                nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
             else:
                 edge_weights[g1, g2] = edge_value
 
-    return edge_weights
+    if return_networkx_graph:
+        return nx_graph
+    else:
+        # triu_idx = np.triu_indices_from(edge_weights, 1)
+        # return edge_weights[triu_idx]
+        return edge_weights
 
 
 def __compute_histogram(values, edges):
     """Computes histogram (density) for a given vector of values."""
 
-    hist = np.histogram(values, bins=edges, density=True)
+    hist, bin_edges = np.histogram(values, bins=edges, density=True)
     hist = __preprocess_histogram(hist, values, edges)
 
     return hist
