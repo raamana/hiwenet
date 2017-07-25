@@ -1,9 +1,9 @@
-
 import sys
 import os
 import nibabel
 import warnings
-import networkx
+import networkx as nx
+import numpy as np
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
@@ -16,40 +16,40 @@ list_medpy_histogram_metrics = np.array([
     'quadratic_forms', 'relative_bin_deviation', 'relative_deviation'])
 
 
-def hiwenet(features, groups, weight_method = 'hist_int',
-            num_bins = 100, trim_outliers = True, trim_percentile = 0.05,
-            return_networkx_graph = False):
+def hiwenet(features, groups, weight_method='hist_int',
+            num_bins=100, trim_outliers=True, trim_percentile=0.05,
+            return_networkx_graph=False):
     """
     
     Parameters
     ----------
-    features : numpy 1d array of length p 
-        with scalar values. 
-    groups : numpy 1d array 
+    features : numpy 1d array of length p
+        with scalar values.
+    groups : numpy 1d array
         Membership array of length p, each value specifying which group that particular node belongs to.
-        For examlpe, if you have a cortical thickness values for 1000 vertices belonging to 100 patches, 
+        For examlpe, if you have a cortical thickness values for 1000 vertices belonging to 100 patches,
         this array could  have numbers 1 to 100 specifying which vertex belongs to which cortical patch.
-        Although grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity, 
-        this could also be a list of strings of length p, 
-            in which case a tuple is returned identifying which weight belongs to which pair of patches.
-    weight_method : string 
+        Grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity,
+        but this could also be a list of strings of length p, in which case a tuple is
+        returned identifying which weight belongs to which pair of patches.
+    weight_method : string
         identifying the type of distance (or metric) to compute between the pair of histograms.
     num_bins : scalar
         Number of bins to use when computing histogram within each patch/group.
         Note:
         1) Please ensure same number of bins are used across different subjects
-        2) histogram shape can vary widely with number of bins (esp with fewer bins in the range of 3-20), 
-        and hence the features extracted based on them vary also. 
-        3) It is recommended to study the impact of this parameter on the final results of the experiment. 
+        2) histogram shape can vary widely with number of bins (esp with fewer bins in the range of 3-20),
+        and hence the features extracted based on them vary also.
+        3) It is recommended to study the impact of this parameter on the final results of the experiment.
         This could also be optimized within an inner cross-validation loop if desired.
     trim_outliers : bool
-        Whether to trim 5% outliers at the edges of feature range, 
+        Whether to trim 5% outliers at the edges of feature range,
         when features are expected to contain extreme outliers (like 0 or eps or Inf).
         This is important to avoid numerical problems and also to stabilize the weight estimates.
     trim_percentile : float
-        Small value specifying the percentile of outliers to trim. 
+        Small value specifying the percentile of outliers to trim.
         Default: 0.05 (5%). Must be in open interval (0, 1).
-    return_networkx_graph : bool 
+    return_networkx_graph : bool
         Specifies the need for a networkx graph populated with weights computed.
 
     Returns
@@ -86,18 +86,22 @@ def hiwenet(features, groups, weight_method = 'hist_int',
     # preprocess data
     if trim_outliers:
         # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
-        edges_of_edges = [ np.percentile(features,     trim_percentile),
-                           np.percentile(features, 1.0-trim_percentile)]
+        edges_of_edges = [np.percentile(features, trim_percentile),
+                          np.percentile(features, 1.0 - trim_percentile)]
     else:
-        edges_of_edges = np.array([ np.min(features), np.max(features)])
+        edges_of_edges = np.array([np.min(features), np.max(features)])
 
     # Edges computed using data from all groups, in order to establish correspondence
-    edges = np.linspace(edges_of_edges[1], edges_of_edges[2], num = num_bins, endpoint = True)
+    edges = np.linspace(edges_of_edges[1], edges_of_edges[2], num=num_bins, endpoint=True)
 
     # memberships
     group_ids, num_groups = identify_groups(groups)
 
-    edge_weights = np.empty([num_groups, num_groups])
+    if return_networkx_graph:
+        edge_weights = nx.Graph()
+        edge_weights.add_nodes_from(np.arange(num_groups))
+    else:
+        edge_weights = np.empty([num_groups, num_groups])
 
     for g1 in num_groups:
         # TODO indexing needs to be implemented with care
@@ -106,12 +110,15 @@ def hiwenet(features, groups, weight_method = 'hist_int',
         # using the same edges for all groups to ensure correspondence
         hist_one = __compute_histogram(features[index1], edges)
 
-        for g2 in xrange(g1+1, num_groups, 1):
+        for g2 in xrange(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
             hist_two = __compute_histogram(features[index2], edges)
+            edge_value = compute_edge_value(hist_one, hist_two, weight_method)
 
-            # TODO matrix or graph? nxG.add_edge(g1, g2, edge_value)
-            edge_weights[g1, g2] = compute_edge_value(hist_one, hist_two, weight_method)
+            if return_networkx_graph:
+                edge_weights.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
+            else:
+                edge_weights[g1, g2] = edge_value
 
     return edge_weights
 
@@ -119,7 +126,7 @@ def hiwenet(features, groups, weight_method = 'hist_int',
 def __compute_histogram(values, edges):
     """Computes histogram (density) for a given vector of values."""
 
-    hist = np.histogram(values, bins = edges, density=True)
+    hist = np.histogram(values, bins=edges, density=True)
     hist = __preprocess_histogram(hist, values, edges)
 
     return hist
@@ -131,10 +138,10 @@ def __preprocess_histogram(hist, values, edges):
     # working with extremely skewed histograms
     if np.count_nonzero(hist) == 0:
         # all of them above upper bound
-        if np.all(values>=edges[-1]):
+        if np.all(values >= edges[-1]):
             hist[-1] = 1
         # all of them below lower bound
-        elif np.all(values<=edges[0]):
+        elif np.all(values <= edges[0]):
             hist[0] = 1
 
     return hist
@@ -169,7 +176,7 @@ def compute_edge_value(hist_one, hist_two, weight_method_str):
 
 def identify_groups(groups):
     """
-    To compute numner of unique elements in a given membership specification.
+    To compute number of unique elements in a given membership specification.
     
     Parameters
     ----------
@@ -186,9 +193,7 @@ def identify_groups(groups):
 
     """
 
-    group_ids = np.unique(groups_str)
+    group_ids = np.unique(groups)
     num_groups = len(group_ids)
 
     return group_ids, num_groups
-
-
