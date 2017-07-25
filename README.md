@@ -10,3 +10,4 @@ A publication outlining one use case is here:
 Another poster describing it can be found here: https://doi.org/10.6084/m9.figshare.5241616
 
 Rough scheme of computation is shown below:
+![illustration](docs/illustration.png)
