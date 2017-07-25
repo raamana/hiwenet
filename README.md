@@ -7,7 +7,8 @@ This package extracts single-subject (individualized, or intrinsic) networks fro
 Rough scheme of computation is shown below:
 ![illustration](docs/illustration.png)
 
-**Note**: Although this techniques was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All you need is a set of nodes/parcellation that has one-to-one correspondence across samples/subjects in your dataset.
+**Note on applicability** 
+Although this technique was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All you need is a set of nodes/parcellation that has one-to-one correspondence across samples/subjects in your dataset.
 
 ## References
 A publication outlining one use case is here:
