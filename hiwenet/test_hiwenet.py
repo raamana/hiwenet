@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from hiwenet import hiwenet
+import hiwenet.extract as hiwenet
 
 dimensionality = 1000
 num_groups = 5

@@ -8,6 +8,7 @@ Rough scheme of computation is shown below:
 ![illustration](docs/illustration.png)
 
 **Note on applicability** 
+
 Although this technique was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All you need is a set of nodes/parcellation that has one-to-one correspondence across samples/subjects in your dataset.
 
 ## References
@@ -27,7 +28,7 @@ This package computes single-subject networks, hence you may need loop over samp
 A rough example of usage can be:
 
 ```python
-import hiwenet
+import hiwenet.extract as hiwenet
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 

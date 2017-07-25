@@ -5,7 +5,7 @@ import warnings
 import networkx as nx
 import numpy as np
 
-list_medpy_histogram_metrics = np.array([
+_list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
     'correlate', 'correlate_1',
     'cosine', 'cosine_1', 'cosine_2', 'cosine_alt',
@@ -16,10 +16,11 @@ list_medpy_histogram_metrics = np.array([
     'quadratic_forms', 'relative_bin_deviation', 'relative_deviation'])
 
 
-def hiwenet(features, groups, weight_method='histogram_intersection',
+def extract(features, groups, weight_method='histogram_intersection',
             num_bins=100, trim_outliers=True, trim_percentile=0.05,
             return_networkx_graph=False):
     """
+    Extracts the histogram weighted network.
     
     Parameters
     ----------
@@ -83,7 +84,7 @@ def hiwenet(features, groups, weight_method='histogram_intersection',
     if trim_percentile < 0 or trim_percentile >= 100:
         raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
 
-    if weight_method not in list_medpy_histogram_metrics:
+    if weight_method not in _list_medpy_histogram_metrics:
         assert NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
 
     # preprocess data
@@ -98,7 +99,7 @@ def hiwenet(features, groups, weight_method='histogram_intersection',
     edges = np.linspace(edges_of_edges[0], edges_of_edges[1], num=num_bins, endpoint=True)
 
     # memberships
-    group_ids, num_groups = identify_groups(groups)
+    group_ids, num_groups = _identify_groups(groups)
     num_links = np.int64(num_groups*(num_groups-1)/2.0)
 
     if return_networkx_graph:
@@ -117,7 +118,7 @@ def hiwenet(features, groups, weight_method='histogram_intersection',
         for g2 in xrange(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
             hist_two = __compute_histogram(features[index2], edges)
-            edge_value = compute_edge_value(hist_one, hist_two, weight_method)
+            edge_value = _compute_edge_value(hist_one, hist_two, weight_method)
 
             if return_networkx_graph:
                 nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
@@ -156,7 +157,7 @@ def __preprocess_histogram(hist, values, edges):
     return hist
 
 
-def compute_edge_value(hist_one, hist_two, weight_method_str):
+def _compute_edge_value(hist_one, hist_two, weight_method_str):
     """
     
     Parameters
@@ -183,7 +184,7 @@ def compute_edge_value(hist_one, hist_two, weight_method_str):
     return edge_value
 
 
-def identify_groups(groups):
+def _identify_groups(groups):
     """
     To compute number of unique elements in a given membership specification.
     
