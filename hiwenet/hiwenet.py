@@ -4,7 +4,6 @@ import os
 import nibabel
 import warnings
 import networkx
-from medpy.metric import histogram as medpy_hist_metrics
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
@@ -62,9 +61,15 @@ def hiwenet(features, groups, weight_method = 'hist_int',
     """
 
     # parameter check
+    num_bins = np.rint(num_bins)
+
     # TODO do some research on setting default values and ranges
-    if num_bins < 5:
+    min_num_bins = 5
+    if num_bins < min_num_bins:
         raise ValueError('Too few bins! The number of bins must be >= 5')
+
+    if np.isnan(num_bins) or np.isinf(num_bins):
+        raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(min_num_bins))
 
     if not isinstance(features, 'numpy.ndarray'):
         features = np.array(features)
@@ -72,44 +77,70 @@ def hiwenet(features, groups, weight_method = 'hist_int',
     if not isinstance(groups, 'numpy.ndarray'):
         features = np.array(groups)
 
+    if trim_percentile < 0.0 or trim_percentile >= 1.0:
+        raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
+
     if weight_method not in list_medpy_histogram_metrics:
         assert NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
 
     # preprocess data
     if trim_outliers:
-        percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
-        edges_of_edges = quantile(features, percentiles_to_keep);
+        # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
+        edges_of_edges = [ np.percentile(features,     trim_percentile),
+                           np.percentile(features, 1.0-trim_percentile)]
     else:
         edges_of_edges = np.array([ np.min(features), np.max(features)])
 
-    edges = linspace(edges_of_edges[1], edges_of_edges[2], num_bins);
+    # Edges computed using data from all groups, in order to establish correspondence
+    edges = np.linspace(edges_of_edges[1], edges_of_edges[2], num = num_bins, endpoint = True)
 
     # memberships
     group_ids, num_groups = identify_groups(groups)
 
-    # TODO what should the order be in edge weights?
-    edge_weights = np.zeros([num_groups, num_groups], order='R')
+    edge_weights = np.empty([num_groups, num_groups])
 
     for g1 in num_groups:
         # TODO indexing needs to be implemented with care
         index1 = groups == group_ids[g1]
-        values_group1 = features[index1]
         # compute histograms for each patch
-        hist_one = __compute_histogram(values_group1)
-        hist_one = __preprocess_histogram(hist_one)
+        # using the same edges for all groups to ensure correspondence
+        hist_one = __compute_histogram(features[index1], edges)
 
         for g2 in xrange(g1+1, num_groups, 1):
             index2 = groups == group_ids[g2]
-            values_group2 = features[index2]
-            hist_two = __compute_histogram(values_group2)
-            hist_two = __preprocess_histogram(hist_two)
+            hist_two = __compute_histogram(features[index2], edges)
+
             # TODO matrix or graph? nxG.add_edge(g1, g2, edge_value)
             edge_weights[g1, g2] = compute_edge_value(hist_one, hist_two, weight_method)
 
     return edge_weights
 
 
-def compute_edge_value(hist_one, hist_two, weight_method):
+def __compute_histogram(values, edges):
+    """Computes histogram (density) for a given vector of values."""
+
+    hist = np.histogram(values, bins = edges, density=True)
+    hist = __preprocess_histogram(hist, values, edges)
+
+    return hist
+
+
+def __preprocess_histogram(hist, values, edges):
+    """Handles edge-cases and extremely-skewed histograms"""
+
+    # working with extremely skewed histograms
+    if np.count_nonzero(hist) == 0:
+        # all of them above upper bound
+        if np.all(values>=edges[-1]):
+            hist[-1] = 1
+        # all of them below lower bound
+        elif np.all(values<=edges[0]):
+            hist[0] = 1
+
+    return hist
+
+
+def compute_edge_value(hist_one, hist_two, weight_method_str):
     """
     
     Parameters
@@ -118,7 +149,7 @@ def compute_edge_value(hist_one, hist_two, weight_method):
         First histogram
     hist_two : sequence
         Second histogram
-    weight_method : string
+    weight_method_str : string
         Identifying the type of distance (or metric) to compute between the pair of histograms.
         Must be one of the metrics implemented in medpy.metric.histogram
         
@@ -128,7 +159,9 @@ def compute_edge_value(hist_one, hist_two, weight_method):
         Distance or metric between the two histograms
     """
 
-    # TODO need a way to turn a string into function
+    from medpy.metric import histogram as medpy_hist_metrics
+
+    weight_method = getattr(medpy_hist_metrics, weight_method_str)
     edge_value = weight_method(hist_one, hist_two)
 
     return edge_value
