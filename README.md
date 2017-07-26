@@ -32,7 +32,7 @@ This package computes single-subject networks, hence you may need loop over samp
 A rough example of usage can be:
 
 ```python
-import hiwenet.extract as hiwenet
+from hiwenet import extract as hiwenet
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 
