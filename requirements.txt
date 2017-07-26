@@ -3,3 +3,4 @@ nibabel
 pyradigm
 medpy
 networkx
+matplotlib
