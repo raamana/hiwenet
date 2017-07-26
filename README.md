@@ -1,5 +1,8 @@
 # Histogram-weighted Networks (hiwenet)
 
+[![codecov](https://codecov.io/gh/raamana/hiwenet/branch/master/graph/badge.svg)](https://codecov.io/gh/raamana/hiwenet)
+[![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
+
 Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience
 
 This package extracts single-subject (individualized, or intrinsic) networks from node-wise (ROI-wise, patch-wise or or another way to identify different graph nodes) by computing the edge weights based on histogram distance between the distributions of values within each node (or ROI or patch or cube). This is a great way to take advantage of the full distribution available within each node, compared to simply averaging it and then using it. 
