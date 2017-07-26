@@ -6,7 +6,7 @@
 
 Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience
 
-This package extracts single-subject (individualized, or intrinsic) networks from node-wise (ROI-wise, patch-wise or or another way to identify different graph nodes) by computing the edge weights based on histogram distance between the distributions of values within each node (or ROI or patch or cube). This is a great way to take advantage of the full distribution available within each node, compared to simply averaging it and then using it. 
+Network-level analysis of various features, esp. if it can be individualized for a single-subject, is proving to be quite a valuable tool in many applications. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic). 
 
 Rough scheme of computation is shown below:
 ![illustration](docs/illustration.png)
