@@ -5,7 +5,7 @@ import warnings
 import networkx as nx
 import numpy as np
 
-_list_medpy_histogram_metrics = np.array([
+list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
     'correlate', 'correlate_1',
     'cosine', 'cosine_1', 'cosine_2', 'cosine_alt',
@@ -17,7 +17,7 @@ _list_medpy_histogram_metrics = np.array([
 
 
 def extract(features, groups, weight_method='histogram_intersection',
-            num_bins=100, trim_outliers=True, trim_percentile=0.05,
+            num_bins=100, trim_outliers=True, trim_percentile=5,
             return_networkx_graph=False):
     """
     Extracts the histogram weighted network.
@@ -51,7 +51,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         Small value specifying the percentile of outliers to trim.
         Default: 5 (5%). Must be in open interval (0, 100).
     return_networkx_graph : bool
-        Specifies the need for a networkx graph populated with weights computed.
+        Specifies the need for a networkx graph populated with weights computed. Default: False.
 
     Returns
     -------
@@ -65,27 +65,8 @@ def extract(features, groups, weight_method='histogram_intersection',
     """
 
     # parameter check
-    num_bins = np.rint(num_bins)
-
-    # TODO do some research on setting default values and ranges
-    min_num_bins = 5
-    if num_bins < min_num_bins:
-        raise ValueError('Too few bins! The number of bins must be >= 5')
-
-    if np.isnan(num_bins) or np.isinf(num_bins):
-        raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(min_num_bins))
-
-    if not isinstance(features, np.ndarray):
-        features = np.array(features)
-
-    if not isinstance(groups, np.ndarray):
-        features = np.array(groups)
-
-    if trim_percentile < 0 or trim_percentile >= 100:
-        raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
-
-    if weight_method not in _list_medpy_histogram_metrics:
-        assert NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
+    features, groups, num_bins, weight_method, group_ids, num_groups = __parameter_check(
+        features, groups, num_bins, weight_method, trim_outliers, trim_percentile)
 
     # preprocess data
     if trim_outliers:
@@ -95,12 +76,8 @@ def extract(features, groups, weight_method='histogram_intersection',
     else:
         edges_of_edges = np.array([np.min(features), np.max(features)])
 
-    # Edges computed using data from all groups, in order to establish correspondence
+    # Edges computed using data from all nodes, in order to establish correspondence
     edges = np.linspace(edges_of_edges[0], edges_of_edges[1], num=num_bins, endpoint=True)
-
-    # memberships
-    group_ids, num_groups = _identify_groups(groups)
-    num_links = np.int64(num_groups*(num_groups-1)/2.0)
 
     if return_networkx_graph:
         nx_graph = nx.Graph()
@@ -109,7 +86,6 @@ def extract(features, groups, weight_method='histogram_intersection',
         edge_weights = np.zeros([num_groups, num_groups], order='F')
 
     for g1 in xrange(num_groups):
-        # TODO indexing needs to be implemented with care
         index1 = groups == group_ids[g1]
         # compute histograms for each patch
         # using the same edges for all groups to ensure correspondence
@@ -118,7 +94,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         for g2 in xrange(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
             hist_two = __compute_histogram(features[index2], edges)
-            edge_value = _compute_edge_value(hist_one, hist_two, weight_method)
+            edge_value = _compute_edge_weight(hist_one, hist_two, weight_method)
 
             if return_networkx_graph:
                 nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
@@ -157,8 +133,9 @@ def __preprocess_histogram(hist, values, edges):
     return hist
 
 
-def _compute_edge_value(hist_one, hist_two, weight_method_str):
+def _compute_edge_weight(hist_one, hist_two, weight_method_str):
     """
+    Computes the edge weight between the two histograms.
     
     Parameters
     ----------
@@ -207,3 +184,47 @@ def _identify_groups(groups):
     num_groups = len(group_ids)
 
     return group_ids, num_groups
+
+
+def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, trim_percentile):
+    """Necessary check on values, ranges, and types."""
+
+    num_bins = np.rint(num_bins)
+
+    # TODO do some research on setting default values and ranges
+    min_num_bins = 5
+    if num_bins < min_num_bins:
+        raise ValueError('Too few bins! The number of bins must be >= 5')
+
+    if np.isnan(num_bins) or np.isinf(num_bins):
+        raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(min_num_bins))
+
+    if not isinstance(features, np.ndarray):
+        features = np.array(features)
+
+    if not isinstance(groups, np.ndarray):
+        groups = np.array(groups)
+
+    # memberships
+    group_ids, num_groups = _identify_groups(groups)
+    num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
+
+    num_values = len(features)
+    if  num_values < num_groups:
+        raise ValueError('Insufficient number of values in features (< number of nodes), or invalid membership!')
+
+    if trim_outliers:
+        if trim_percentile < 0 or trim_percentile >= 100:
+            raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
+
+    if not trim_outliers:
+        if num_values < 2:
+            raise ValueError('too few features to compute minimum and maximum')
+
+    if weight_method not in list_medpy_histogram_metrics:
+        raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
+
+    if num_groups < 2:
+        raise ValueError('There must be atleast two nodes or groups in data, for pair-wise edge-weight calculations.')
+
+    return features, groups, num_bins, weight_method, group_ids, num_groups
