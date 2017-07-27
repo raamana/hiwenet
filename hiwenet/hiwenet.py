@@ -28,7 +28,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         with scalar values.
     groups : numpy 1d array
         Membership array of length p, each value specifying which group that particular node belongs to.
-        For examlpe, if you have a cortical thickness values for 1000 vertices belonging to 100 patches,
+        For example, if you have a cortical thickness values for 1000 vertices belonging to 100 patches,
         this array could  have numbers 1 to 100 specifying which vertex belongs to which cortical patch.
         Grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity,
         but this could also be a list of strings of length p, in which case a tuple is
@@ -65,7 +65,7 @@ def extract(features, groups, weight_method='histogram_intersection',
     """
 
     # parameter check
-    features, groups, num_bins, weight_method, group_ids, num_groups = __parameter_check(
+    features, groups, num_bins, weight_method, group_ids, num_groups, num_links = __parameter_check(
         features, groups, num_bins, weight_method, trim_outliers, trim_percentile)
 
     # preprocess data
@@ -85,6 +85,7 @@ def extract(features, groups, weight_method='histogram_intersection',
     else:
         edge_weights = np.zeros([num_groups, num_groups], order='F')
 
+    exceptions_list = list()
     for g1 in xrange(num_groups):
         index1 = groups == group_ids[g1]
         # compute histograms for each patch
@@ -94,12 +95,22 @@ def extract(features, groups, weight_method='histogram_intersection',
         for g2 in xrange(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
             hist_two = __compute_histogram(features[index2], edges)
-            edge_value = _compute_edge_weight(hist_one, hist_two, weight_method)
 
-            if return_networkx_graph:
-                nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
-            else:
-                edge_weights[g1, g2] = edge_value
+            try:
+                edge_value = _compute_edge_weight(hist_one, hist_two, weight_method)
+                if return_networkx_graph:
+                    nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
+                else:
+                    edge_weights[g1, g2] = edge_value
+            except BaseException as exc:
+                # numerical instabilities can cause trouble for histogram distance calculations
+                exceptions_list.append(str(exc))
+                warnings.warn('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1], group_ids[g2]))
+
+    error_thresh = 0.5
+    if len(exceptions_list) >= error_thresh*num_links:
+        print('All exceptions encountered so far:\n {}'.format('\n'.join(exceptions_list)))
+        raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh*100))
 
     if return_networkx_graph:
         return nx_graph
@@ -227,4 +238,4 @@ def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, 
     if num_groups < 2:
         raise ValueError('There must be atleast two nodes or groups in data, for pair-wise edge-weight calculations.')
 
-    return features, groups, num_bins, weight_method, group_ids, num_groups
+    return features, groups, num_bins, weight_method, group_ids, num_groups, num_links

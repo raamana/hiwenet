@@ -10,7 +10,7 @@ setup(name='hiwenet',
       author_email='raamana@gmail.com',
       url='https://github.com/raamana/hiwenet',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]), # ['neuropredict'],
-      install_requires=['numpy', 'pyradigm', 'nibabel'],
+      install_requires=['numpy', 'pyradigm', 'nibabel', 'networkx', 'medpy'],
       classifiers=[
               'Intended Audience :: Science/Research',
               'Programming Language :: Python',
