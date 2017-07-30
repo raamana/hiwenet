@@ -13,8 +13,24 @@ list_medpy_histogram_metrics = np.array([
     'histogram_intersection', 'histogram_intersection_1',
     'jensen_shannon', 'kullback_leibler', 'manhattan', 'minowski',
     'noelle_1', 'noelle_2', 'noelle_3', 'noelle_4', 'noelle_5',
-    'quadratic_forms', 'relative_bin_deviation', 'relative_deviation'])
+    'relative_bin_deviation', 'relative_deviation'])
 
+metric_list = [
+    'kullback_leibler', 'manhattan', 'minowski', 'euclidean',
+    'cosine_1',
+    'noelle_2', 'noelle_4', 'noelle_5' ]
+
+unknown_prop_list = ['histogram_intersection']
+still_under_dev = ['quadratic_forms']
+similarity_func = ['correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
+
+semi_metric_list = [
+    'jensen_shannon', 'chi_square',
+    'chebyshev', 'chebyshev_neg',
+    'histogram_intersection_1',
+    'relative_deviation', 'relative_bin_deviation',
+    'noelle_1', 'noelle_3',
+    'correlate_1']
 
 def extract(features, groups, weight_method='histogram_intersection',
             num_bins=100, trim_outliers=True, trim_percentile=5,
@@ -35,6 +51,18 @@ def extract(features, groups, weight_method='histogram_intersection',
         returned identifying which weight belongs to which pair of patches.
     weight_method : string
         identifying the type of distance (or metric) to compute between the pair of histograms.
+        It must be one of the methods implemented in medpy.metric.histogram: 
+        [ 'chebyshev', 'chebyshev_neg', 'chi_square', 'correlate', 'correlate_1', 
+        'cosine', 'cosine_1', 'cosine_2', 'cosine_alt', 'euclidean', 'fidelity_based', 
+        'histogram_intersection', 'histogram_intersection_1', 'jensen_shannon', 'kullback_leibler', 
+        'manhattan', 'minowski', 'noelle_1', 'noelle_2', 'noelle_3', 'noelle_4', 'noelle_5', 
+        'relative_bin_deviation', 'relative_deviation'] except 'quadratic_forms'.
+        Note only the following are metrics: [ 'kullback_leibler', 'manhattan', 'minowski', 'euclidean', 
+        'cosine_1', 'noelle_2', 'noelle_4', 'noelle_5' ], 
+        the following are semi-metrics: [ 'jensen_shannon', 'chi_square', 'chebyshev', 'chebyshev_neg', 'correlate_1' , 
+        'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation', 'noelle_1', 'noelle_3']
+        and the rest are similarity functions: 
+            ['histogram_intersection', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
     num_bins : scalar
         Number of bins to use when computing histogram within each patch/group.
         Note:
