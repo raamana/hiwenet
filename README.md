@@ -34,7 +34,13 @@ A rough example of usage can be:
 ```python
 from hiwenet import extract as hiwenet
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
 import numpy as np
+import os
+
+my_project = '/data/myproject'
+subject_list = ['a1', 'b2', 'c3', 'd4']
+subject_labels = [1, 1, -1, -1]
 
 num_subjects = len(subject_list)
 num_ROIs = 50
@@ -42,10 +48,25 @@ edge_weights = np.empty(num_subjects, num_ROIs*(num_ROIs-1)/2.0)
 
 out_folder = os.path.join(my_project, 'hiwenet')
 
+
+def get_features(subject_id):
+    "Placeholder to insert your own function to read subject-wise features."
+    features_path = os.path.join(my_project,'base_features', subject_id, 'features.txt')
+    feature_vector = np.loadtxt(features_path)
+    
+    return feature_vector
+
+def upper_triu_vec(matrix):
+    "Returns the vectorized values of upper triangular part of a matrix"
+    
+    triu_idx = np.triu_indices_from(matrix, 1)
+    return matrix[triu_idx]
+    
+
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
   edge_weights_subject = hiwenet(features)
-  edge_weights[ii,:] = edge_weights_subject
+  edge_weights[ii,:] = upper_triu_vec(edge_weights_subject)
   
   out_file = os.path.join(out_folder, 'hiwenet_{}.txt'.format(subject))
   np.save(out_file, edge_weights_subject)
@@ -53,10 +74,9 @@ for ss, subject in enumerate(subject_list):
   
 # proceed to analysis
 
-# very rough example for training a classifier (this is not cross validation)
+# very rough example for training/evaluating a classifier
 rf = RandomForestClassifier(oob_score = True)
-rf.fit(edge_weights, train_labels)
-oob_error_train = rf.oob_score_
+scores = cross_val_score(rf, edge_weights, subject_labels)
 
 
 ```

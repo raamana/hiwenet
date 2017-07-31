@@ -83,13 +83,11 @@ def extract(features, groups, weight_method='histogram_intersection',
 
     Returns
     -------
-    edge_weights : numpy 1d array of pair-wise edge-weights. 
+    edge_weights : numpy 2d array of pair-wise edge-weights. 
         Size: num_groups x num_groups, wherein num_groups is determined by the total number of unique values in groups.
         Only the upper triangular matrix is filled as the distance between node i and j would be the same as j and i.
         The edge weights from the upper triangular matrix can easily be obtained by
         weights_array = edge_weights[ np.triu_indices_from(edge_weights, 1) ]
-
-
     """
 
     # parameter check
