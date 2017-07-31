@@ -56,7 +56,7 @@ def get_features(subject_id):
     
     return feature_vector
 
-def upper_triu_vec(matrix):
+def upper_tri_vec(matrix):
     "Returns the vectorized values of upper triangular part of a matrix"
     
     triu_idx = np.triu_indices_from(matrix, 1)
@@ -66,7 +66,7 @@ def upper_triu_vec(matrix):
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
   edge_weights_subject = hiwenet(features)
-  edge_weights[ii,:] = upper_triu_vec(edge_weights_subject)
+  edge_weights[ii,:] = upper_tri_vec(edge_weights_subject)
   
   out_file = os.path.join(out_folder, 'hiwenet_{}.txt'.format(subject))
   np.save(out_file, edge_weights_subject)
