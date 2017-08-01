@@ -35,6 +35,23 @@ semi_metric_list = [
 minimum_num_bins = 5
 default_num_bins = 100
 
+
+def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
+    "Compute the edges for the histogram bins to keep it the same for all nodes."
+
+    if trim_outliers:
+        # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
+        edges_of_edges = np.array([np.percentile(features, trim_percentile),
+                                   np.percentile(features, 100 - trim_percentile)])
+    else:
+        edges_of_edges = np.array([np.min(features), np.max(features)])
+
+    # Edges computed using data from all nodes, in order to establish correspondence
+    edges = np.linspace(edges_of_edges[0], edges_of_edges[1], num=num_bins, endpoint=True)
+
+    return edges
+
+
 def extract(features, groups, weight_method='histogram_intersection',
             num_bins=default_num_bins, trim_outliers=True, trim_percentile=5,
             return_networkx_graph=False):
@@ -97,16 +114,8 @@ def extract(features, groups, weight_method='histogram_intersection',
     features, groups, num_bins, weight_method, group_ids, num_groups, num_links = __parameter_check(
         features, groups, num_bins, weight_method, trim_outliers, trim_percentile)
 
-    # preprocess data
-    if trim_outliers:
-        # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
-        edges_of_edges = np.array([ np.percentile(features, trim_percentile),
-                                    np.percentile(features, 100 - trim_percentile)])
-    else:
-        edges_of_edges = np.array([np.min(features), np.max(features)])
-
-    # Edges computed using data from all nodes, in order to establish correspondence
-    edges = np.linspace(edges_of_edges[0], edges_of_edges[1], num=num_bins, endpoint=True)
+    # using the same bin edges for all nodes/groups to ensure correspondence
+    edges = __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile)
 
     if return_networkx_graph:
         nx_graph = nx.Graph()
@@ -117,8 +126,6 @@ def extract(features, groups, weight_method='histogram_intersection',
     exceptions_list = list()
     for g1 in xrange(num_groups):
         index1 = groups == group_ids[g1]
-        # compute histograms for each patch
-        # using the same edges for all groups to ensure correspondence
         hist_one = __compute_histogram(features[index1], edges)
 
         for g2 in xrange(g1 + 1, num_groups, 1):
@@ -136,7 +143,7 @@ def extract(features, groups, weight_method='histogram_intersection',
                 exceptions_list.append(str(exc))
                 warnings.warn('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1], group_ids[g2]))
 
-    error_thresh = 0.5
+    error_thresh = 0.05
     if len(exceptions_list) >= error_thresh*num_links:
         print('All exceptions encountered so far:\n {}'.format('\n'.join(exceptions_list)))
         raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh*100))
