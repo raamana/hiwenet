@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/raamana/hiwenet/branch/master/graph/badge.svg)](https://codecov.io/gh/raamana/hiwenet)
 [![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
 
-Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience
+Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience
 
 Network-level analysis of various features, esp. if it can be individualized for a single-subject, is proving to be quite a valuable tool in many applications. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic). 
 
@@ -24,6 +24,8 @@ Another poster describing it can be found here: https://doi.org/10.6084/m9.figsh
 ## Installation
 
 `pip install -U hiwenet`
+
+I don't expect the core compuation to change at all, but it's always a good idea to update regularly (-U is key in the above command) to ensure you get all the bug-fixes, new features and optimized performance. 
 
 ## Usage
 
