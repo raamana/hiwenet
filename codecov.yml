@@ -1,0 +1,3 @@
+ignore:
+  - hiwenet/simple_visualization_examples.py
+  - "hiwenet/__*__.py"

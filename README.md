@@ -3,6 +3,8 @@
 [![travis](https://travis-ci.org/raamana/hiwenet.svg?branch=master)](https://travis-ci.org/raamana/hiwenet.svg?branch=master)
 [![codecov](https://codecov.io/gh/raamana/hiwenet/branch/master/graph/badge.svg)](https://codecov.io/gh/raamana/hiwenet)
 [![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.836100.svg)](https://doi.org/10.5281/zenodo.836100)
+
 
 Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience
 
@@ -68,9 +70,19 @@ groups = get_parcellation(atlas, feature_dimensionality)
 
 out_folder = os.path.join(my_project, 'hiwenet')
 
-dist_method = [ 'kullback_leibler', 'manhattan', 'minowski', 'euclidean', 
+# choose a method from one among the three groups (metrics, semi-metrics and similarity functions)
+metrics = [ 'kullback_leibler', 'manhattan', 'minowski', 'euclidean', 
     'cosine_1', 'noelle_2', 'noelle_4', 'noelle_5' ]
-    
+
+semi_metric_list = [
+    'jensen_shannon', 'chi_square',
+    'chebyshev', 'chebyshev_neg',
+    'histogram_intersection_1',
+    'relative_deviation', 'relative_bin_deviation',
+    'noelle_1', 'noelle_3',
+    'correlate_1']
+similarity_func = ['correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
+
 
 
 def get_features(subject_id):
@@ -90,7 +102,7 @@ def upper_tri_vec(matrix):
 
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
-  edge_weights_subject = hiwenet(features, groups) # or add weight_method = dist_method[ii] to use a various other metrics 
+  edge_weights_subject = hiwenet(features, groups) # or add weight_method = metrics[ii] to use a various other metrics 
   edge_weights[ss,:] = upper_tri_vec(edge_weights_subject)
   
   out_file = os.path.join(out_folder, 'hiwenet_{}.txt'.format(subject))
@@ -106,3 +118,9 @@ scores = cross_val_score(rf, edge_weights, subject_labels)
 
 
 ```
+
+## Citation
+
+If you found it useful for your research, please cite it as:
+
+ * Pradeep Reddy Raamana. (2017). *Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience*. Zenodo. http://doi.org/10.5281/zenodo.836100 
