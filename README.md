@@ -36,17 +36,39 @@ from hiwenet import extract as hiwenet
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 import numpy as np
+import nibabel
 import os
 
+# ----------------------------------------------------
+# toy examples - modify for your application/need
 my_project = '/data/myproject'
 subject_list = ['a1', 'b2', 'c3', 'd4']
 subject_labels = [1, 1, -1, -1]
 
 num_subjects = len(subject_list)
+# number of features (imaging vertex-wise cortical thickness values over the whole brain)
+feature_dimensionality = 1000 
 num_ROIs = 50
 edge_weights = np.empty(num_subjects, num_ROIs*(num_ROIs-1)/2.0)
 
+atlas = 'fsaverage'
+# ----------------------------------------------------
+
+def get_parcellation(atlas, parcel_param):
+    "Placeholder to insert your own function to return parcellation in reference space."
+    parc_path = os.path.join(atlas, 'parcellation_param{}.mgh'.format(parcel_param))
+    parcel = nibabel.freesurfer.io.read_geometry(parc_path)
+    
+    return parcel
+
+
+groups = get_parcellation(atlas, feature_dimensionality)
+
 out_folder = os.path.join(my_project, 'hiwenet')
+
+dist_method = [ 'kullback_leibler', 'manhattan', 'minowski', 'euclidean', 
+    'cosine_1', 'noelle_2', 'noelle_4', 'noelle_5' ]
+    
 
 
 def get_features(subject_id):
@@ -55,6 +77,7 @@ def get_features(subject_id):
     feature_vector = np.loadtxt(features_path)
     
     return feature_vector
+
 
 def upper_tri_vec(matrix):
     "Returns the vectorized values of upper triangular part of a matrix"
@@ -65,14 +88,15 @@ def upper_tri_vec(matrix):
 
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
-  edge_weights_subject = hiwenet(features)
-  edge_weights[ii,:] = upper_tri_vec(edge_weights_subject)
+  edge_weights_subject = hiwenet(features, groups) # or add weight_method = dist_method[ii] to use a various other metrics 
+  edge_weights[ss,:] = upper_tri_vec(edge_weights_subject)
   
   out_file = os.path.join(out_folder, 'hiwenet_{}.txt'.format(subject))
   np.save(out_file, edge_weights_subject)
   
   
 # proceed to analysis
+
 
 # very rough example for training/evaluating a classifier
 rf = RandomForestClassifier(oob_score = True)

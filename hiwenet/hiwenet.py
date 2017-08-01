@@ -228,7 +228,6 @@ def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, 
 
     num_bins = np.rint(num_bins)
 
-    # TODO do some research on setting default values and ranges
     min_num_bins = 5
     if num_bins < min_num_bins:
         raise ValueError('Too few bins! The number of bins must be >= 5')
