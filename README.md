@@ -1,9 +1,9 @@
 # Histogram-weighted Networks (hiwenet)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.836100.svg)](https://doi.org/10.5281/zenodo.836100)
 [![travis](https://travis-ci.org/raamana/hiwenet.svg?branch=master)](https://travis-ci.org/raamana/hiwenet.svg?branch=master)
 [![codecov](https://codecov.io/gh/raamana/hiwenet/branch/master/graph/badge.svg)](https://codecov.io/gh/raamana/hiwenet)
 [![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.836100.svg)](https://doi.org/10.5281/zenodo.836100)
 
 
 Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience

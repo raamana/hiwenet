@@ -32,8 +32,11 @@ semi_metric_list = [
     'noelle_1', 'noelle_3',
     'correlate_1']
 
+minimum_num_bins = 5
+default_num_bins = 100
+
 def extract(features, groups, weight_method='histogram_intersection',
-            num_bins=100, trim_outliers=True, trim_percentile=5,
+            num_bins=default_num_bins, trim_outliers=True, trim_percentile=5,
             return_networkx_graph=False):
     """
     Extracts the histogram weighted network.
@@ -220,20 +223,37 @@ def _identify_groups(groups):
     group_ids = np.unique(groups)
     num_groups = len(group_ids)
 
+    if num_groups < 2:
+        raise ValueError('There must be atleast two nodes or groups in data, for pair-wise edge-weight calculations.')
+
     return group_ids, num_groups
 
 
-def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, trim_percentile):
-    """Necessary check on values, ranges, and types."""
+def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, trim_percentile):
+    """Ensuring the parameters are in valid ranges."""
+
+    if num_bins < minimum_num_bins:
+        raise ValueError('Too few bins! The number of bins must be >= 5')
+
+    if num_values < num_groups:
+        raise ValueError('Insufficient number of values in features (< number of nodes), or invalid membership!')
+
+    if trim_outliers:
+        if trim_percentile < 0 or trim_percentile >= 100:
+            raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
+    elif num_values < 2:
+        raise ValueError('too few features to compute minimum and maximum')
+
+    return
+
+
+def _type_cast_parameters(num_bins, features, groups):
+    """Casting inputs to required types."""
 
     num_bins = np.rint(num_bins)
 
-    min_num_bins = 5
-    if num_bins < min_num_bins:
-        raise ValueError('Too few bins! The number of bins must be >= 5')
-
     if np.isnan(num_bins) or np.isinf(num_bins):
-        raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(min_num_bins))
+        raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(minimum_num_bins))
 
     if not isinstance(features, np.ndarray):
         features = np.array(features)
@@ -241,26 +261,22 @@ def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, 
     if not isinstance(groups, np.ndarray):
         groups = np.array(groups)
 
+    return num_bins, features, groups
+
+
+def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, trim_percentile):
+    """Necessary check on values, ranges, and types."""
+
+    num_bins, features, groups = _type_cast_parameters(num_bins, features, groups)
+    num_values = len(features)
+
     # memberships
     group_ids, num_groups = _identify_groups(groups)
     num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
 
-    num_values = len(features)
-    if  num_values < num_groups:
-        raise ValueError('Insufficient number of values in features (< number of nodes), or invalid membership!')
-
-    if trim_outliers:
-        if trim_percentile < 0 or trim_percentile >= 100:
-            raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
-
-    if not trim_outliers:
-        if num_values < 2:
-            raise ValueError('too few features to compute minimum and maximum')
+    _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, trim_percentile)
 
     if weight_method not in list_medpy_histogram_metrics:
         raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
-
-    if num_groups < 2:
-        raise ValueError('There must be atleast two nodes or groups in data, for pair-wise edge-weight calculations.')
 
     return features, groups, num_bins, weight_method, group_ids, num_groups, num_links
