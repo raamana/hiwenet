@@ -1,7 +1,8 @@
 import sys
 import os
-import nibabel
+import argparse
 import warnings
+import nibabel
 import networkx as nx
 import numpy as np
 
@@ -33,8 +34,10 @@ semi_metric_list = [
     'correlate_1']
 
 minimum_num_bins = 5
-default_num_bins = 100
 
+default_weight_method = 'kullback_leibler'
+default_num_bins = 100
+default_trim_percentile = 5
 
 def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
@@ -287,3 +290,92 @@ def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, 
         raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
 
     return features, groups, num_bins, weight_method, group_ids, num_groups, num_links
+
+
+def __run():
+    "Main entry point from the command line."
+
+    features_path, groups_path, weight_method, num_bins, \
+        trim_outliers, trim_percentile, return_networkx_graph = __parse_args()
+
+    features, groups = __read_features_groups(features_path, groups_path)
+
+    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph)
+
+
+def __read_features_groups(features_path, groups_path):
+    "Reader for data and groups"
+
+    try:
+        features = np.loadtxt(features_path)
+        groups = np.loadtxt(groups_path)
+    except:
+        raise IOError('error reading the specified features and/or groups.')
+
+    assert len(features) == len(groups), "lengths of features and groups do not match!"
+
+    return features, groups
+
+
+def __parse_args():
+    """Parser/validator for the cmd line args."""
+
+    parser = argparse.ArgumentParser(prog="neuropredict")
+
+    parser.add_argument("-f", "--features_path", action="store", dest="features_path",
+                        required=True,
+                        help="Abs. path to file containing features for a given subject")
+
+    parser.add_argument("-g", "--groups_path", action="store", dest="groups_path",
+                        required=True,
+                        help="path to a file containing element-wise membership into groups/nodes/patches.")
+
+    parser.add_argument("-w", "--weight_method", action="store", dest="weight_method",
+                        default= default_weight_method, required=False,
+                        help="Method used to estimate the weight between the pair of nodes. Default : {}".format(default_weight_method))
+
+    parser.add_argument("-n", "--num_bins", action="store", dest="num_bins",
+                        default= minimum_num_bins, required=False,
+                        help="Number of bins used to construct the histogram. Default : {}".format(minimum_num_bins))
+
+    parser.add_argument("-t", "--trim_outliers", action="store", dest="trim_outliers",
+                        default=True, required=False,
+                        help="Boolean flag indicating whether to trim the extreme/outlying values. Default True.")
+
+    parser.add_argument("-p", "--trim_percentile", action="store", dest="trim_percentile",
+                        default= default_trim_percentile, required=False,
+                        help="Small value specifying the percentile of outliers to trim. "
+                             "Default: {0}%% , must be in open interval (0, 100).".format(default_trim_percentile))
+
+    parser.add_argument("-r", "--return_networkx_graph", action="store", dest="return_networkx_graph",
+                        default=False, required=False,
+                        help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
+
+    parser.add_argument("-o", "--out_path", action="store", dest="out_path",
+                        required=False, default = None,
+                        help="Output path to store the extracted pair-wise edge weights. Default: same folder, with _hiwenet.txt suffix added.")
+
+    if len(sys.argv) < 2:
+        print('Too few arguments!')
+        parser.print_help()
+        parser.exit(1)
+
+    # parsing
+    try:
+        params = parser.parse_args()
+    except:
+        parser.exit(1)
+
+    # noinspection PyUnboundLocalVariable
+    features_path = os.path.abspath(params.features_path)
+    assert os.path.exists(features_path), "Given features file doesn't exist."
+
+    groups_path = os.path.abspath(params.groups_path)
+    assert os.path.exists(groups_path), "Given groups file doesn't exist."
+
+    return features_path, groups_path, params.weight_method, params.num_bins, \
+           params.trim_outliers, params.trim_percentile, params.return_networkx_graph
+
+
+if __name__ == '__main__':
+    __run()

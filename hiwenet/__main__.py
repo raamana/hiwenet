@@ -3,7 +3,7 @@ import hiwenet
 def main():
     "Entry point."
 
-    hiwenet.run()
+    hiwenet.__run()
 
 if __name__ == '__main__':
     main()
