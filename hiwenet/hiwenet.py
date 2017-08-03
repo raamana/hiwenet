@@ -57,7 +57,7 @@ def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
 
 def extract(features, groups, weight_method='histogram_intersection',
             num_bins=default_num_bins, trim_outliers=True, trim_percentile=5,
-            return_networkx_graph=False):
+            return_networkx_graph=False, weights_out_path=None):
     """
     Extracts the histogram weighted network.
     
@@ -72,7 +72,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         Grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity,
         but this could also be a list of strings of length p, in which case a tuple is
         returned identifying which weight belongs to which pair of patches.
-    weight_method : string
+    weight_method : string, optional
         identifying the type of distance (or metric) to compute between the pair of histograms.
         It must be one of the methods implemented in medpy.metric.histogram: 
         [ 'chebyshev', 'chebyshev_neg', 'chi_square', 'correlate', 'correlate_1', 
@@ -86,7 +86,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation', 'noelle_1', 'noelle_3']
         and the rest are similarity functions: 
             ['histogram_intersection', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
-    num_bins : scalar
+    num_bins : scalar, optional
         Number of bins to use when computing histogram within each patch/group.
         Note:
         1) Please ensure same number of bins are used across different subjects
@@ -94,15 +94,17 @@ def extract(features, groups, weight_method='histogram_intersection',
         and hence the features extracted based on them vary also.
         3) It is recommended to study the impact of this parameter on the final results of the experiment.
         This could also be optimized within an inner cross-validation loop if desired.
-    trim_outliers : bool
+    trim_outliers : bool, optional
         Whether to trim 5% outliers at the edges of feature range,
         when features are expected to contain extreme outliers (like 0 or eps or Inf).
         This is important to avoid numerical problems and also to stabilize the weight estimates.
     trim_percentile : float
         Small value specifying the percentile of outliers to trim.
         Default: 5 (5%). Must be in open interval (0, 100).
-    return_networkx_graph : bool
+    return_networkx_graph : bool, optional
         Specifies the need for a networkx graph populated with weights computed. Default: False.
+    weights_out_path : str, optional
+        Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.
 
     Returns
     -------
@@ -152,10 +154,12 @@ def extract(features, groups, weight_method='histogram_intersection',
         raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh*100))
 
     if return_networkx_graph:
+        if weights_out_path is not None:
+           nx_graph.write_graphml(weights_out_path) 
         return nx_graph
     else:
-        # triu_idx = np.triu_indices_from(edge_weights, 1)
-        # return edge_weights[triu_idx]
+        if weights_out_path is not None:
+            np.savetxt(weights_out_path, edge_weights)
         return edge_weights
 
 
@@ -296,11 +300,11 @@ def __run():
     "Main entry point from the command line."
 
     features_path, groups_path, weight_method, num_bins, \
-        trim_outliers, trim_percentile, return_networkx_graph = __parse_args()
+        trim_outliers, trim_percentile, return_networkx_graph, weights_out_path = __parse_args()
 
     features, groups = __read_features_groups(features_path, groups_path)
 
-    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph)
+    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph, weights_out_path)
 
 
 def __read_features_groups(features_path, groups_path):
@@ -320,7 +324,7 @@ def __read_features_groups(features_path, groups_path):
 def __parse_args():
     """Parser/validator for the cmd line args."""
 
-    parser = argparse.ArgumentParser(prog="neuropredict")
+    parser = argparse.ArgumentParser(prog="hiwenet")
 
     parser.add_argument("-f", "--features_path", action="store", dest="features_path",
                         required=True,
@@ -351,9 +355,9 @@ def __parse_args():
                         default=False, required=False,
                         help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
 
-    parser.add_argument("-o", "--out_path", action="store", dest="out_path",
+    parser.add_argument("-o", "--weights_out_path", action="store", dest="weights_out_path",
                         required=False, default = None,
-                        help="Output path to store the extracted pair-wise edge weights. Default: same folder, with _hiwenet.txt suffix added.")
+                        help="Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.")
 
     if len(sys.argv) < 2:
         print('Too few arguments!')
@@ -374,7 +378,7 @@ def __parse_args():
     assert os.path.exists(groups_path), "Given groups file doesn't exist."
 
     return features_path, groups_path, params.weight_method, params.num_bins, \
-           params.trim_outliers, params.trim_percentile, params.return_networkx_graph
+           params.trim_outliers, params.trim_percentile, params.return_networkx_graph, weights_out_path
 
 
 if __name__ == '__main__':
