@@ -4,7 +4,6 @@
 [![travis](https://travis-ci.org/raamana/hiwenet.svg?branch=master)](https://travis-ci.org/raamana/hiwenet.svg?branch=master)
 [![codecov](https://codecov.io/gh/raamana/hiwenet/branch/master/graph/badge.svg)](https://codecov.io/gh/raamana/hiwenet)
 [![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
-[![Code Climate](https://codeclimate.com/github/raamana/hiwenet/badges/gpa.svg)](https://codeclimate.com/github/raamana/hiwenet)
 
 
 Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience
