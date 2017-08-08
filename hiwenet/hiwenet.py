@@ -76,15 +76,14 @@ def extract(features, groups, weight_method='histogram_intersection',
         identifying the type of distance (or metric) to compute between the pair of histograms.
         It must be one of the methods implemented in medpy.metric.histogram: 
         [ 'chebyshev', 'chebyshev_neg', 'chi_square', 'correlate', 'correlate_1', 
-        'cosine', 'cosine_1', 'cosine_2', 'cosine_alt', 'euclidean', 'fidelity_based', 
+        'cosine', 'cosine_1', 'cosine_2', 'cosine_alt', 'euclidean', 'fidelity_based',
         'histogram_intersection', 'histogram_intersection_1', 'jensen_shannon', 'kullback_leibler', 
         'manhattan', 'minowski', 'noelle_1', 'noelle_2', 'noelle_3', 'noelle_4', 'noelle_5', 
         'relative_bin_deviation', 'relative_deviation'] except 'quadratic_forms'.
-        Note only the following are metrics: [ 'kullback_leibler', 'manhattan', 'minowski', 'euclidean', 
-        'cosine_1', 'noelle_2', 'noelle_4', 'noelle_5' ], 
-        the following are semi-metrics: [ 'jensen_shannon', 'chi_square', 'chebyshev', 'chebyshev_neg', 'correlate_1' , 
-        'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation', 'noelle_1', 'noelle_3']
-        and the rest are similarity functions: 
+        Note only the following are metrics: ['manhattan', 'minowski', 'euclidean', 'noelle_2', 'noelle_4', 'noelle_5'],
+        the following are semi- or quasi-metrics: [ 'kullback_leibler', 'jensen_shannon', 'chi_square', 'chebyshev',
+        'cosine_1', 'chebyshev_neg', 'correlate_1', 'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation',
+        'noelle_1', 'noelle_3'] and the rest are similarity functions:
             ['histogram_intersection', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
     num_bins : scalar, optional
         Number of bins to use when computing histogram within each patch/group.

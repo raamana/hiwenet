@@ -1,6 +1,5 @@
 numpy
-nibabel
-pyradigm
 medpy
+hypothesis
 networkx
 matplotlib
