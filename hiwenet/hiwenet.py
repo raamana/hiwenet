@@ -57,7 +57,7 @@ def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
 
 def extract(features, groups, weight_method='histogram_intersection',
             num_bins=default_num_bins, trim_outliers=True, trim_percentile=5,
-            return_networkx_graph=False, weights_out_path=None):
+            return_networkx_graph=False, out_weights_path=None):
     """
     Extracts the histogram weighted network.
     
@@ -102,7 +102,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         Default: 5 (5%). Must be in open interval (0, 100).
     return_networkx_graph : bool, optional
         Specifies the need for a networkx graph populated with weights computed. Default: False.
-    weights_out_path : str, optional
+    out_weights_path : str, optional
         Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.
 
     Returns
@@ -153,12 +153,12 @@ def extract(features, groups, weight_method='histogram_intersection',
         raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh*100))
 
     if return_networkx_graph:
-        if weights_out_path is not None:
-           nx_graph.write_graphml(weights_out_path) 
+        if out_weights_path is not None:
+           nx_graph.write_graphml(out_weights_path) 
         return nx_graph
     else:
-        if weights_out_path is not None:
-            np.savetxt(weights_out_path, edge_weights)
+        if out_weights_path is not None:
+            np.savetxt(out_weights_path, edge_weights)
         return edge_weights
 
 
@@ -299,11 +299,16 @@ def __run():
     "Main entry point from the command line."
 
     features_path, groups_path, weight_method, num_bins, \
-        trim_outliers, trim_percentile, return_networkx_graph, weights_out_path = __parse_args()
+        trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = __parse_args()
+    
+    # TODO add the possibility to process multiple combinations of parameters: diff subjects, diff metrics
+    # for features_path to be a file containing multiple subjects (one/line)
+    # -w could take multiple values kldiv,histint,
+    # each line: input_features_path,out_weights_path
 
     features, groups = __read_features_groups(features_path, groups_path)
 
-    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph, weights_out_path)
+    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph, out_weights_path)
 
 
 def __read_features_groups(features_path, groups_path):
@@ -325,7 +330,7 @@ def __parse_args():
 
     parser = argparse.ArgumentParser(prog="hiwenet")
 
-    parser.add_argument("-f", "--features_path", action="store", dest="features_path",
+    parser.add_argument("-f", "--in_features_path", action="store", dest="in_features_path",
                         required=True,
                         help="Abs. path to file containing features for a given subject")
 
@@ -336,6 +341,10 @@ def __parse_args():
     parser.add_argument("-w", "--weight_method", action="store", dest="weight_method",
                         default= default_weight_method, required=False,
                         help="Method used to estimate the weight between the pair of nodes. Default : {}".format(default_weight_method))
+
+    parser.add_argument("-o", "--out_weights_path", action="store", dest="out_weights_path",
+                        required=False, default = None,
+                        help="Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.")
 
     parser.add_argument("-n", "--num_bins", action="store", dest="num_bins",
                         default= minimum_num_bins, required=False,
@@ -354,10 +363,6 @@ def __parse_args():
                         default=False, required=False,
                         help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
 
-    parser.add_argument("-o", "--weights_out_path", action="store", dest="weights_out_path",
-                        required=False, default = None,
-                        help="Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.")
-
     if len(sys.argv) < 2:
         print('Too few arguments!')
         parser.print_help()
@@ -370,14 +375,14 @@ def __parse_args():
         parser.exit(1)
 
     # noinspection PyUnboundLocalVariable
-    features_path = os.path.abspath(params.features_path)
-    assert os.path.exists(features_path), "Given features file doesn't exist."
+    in_features_path = os.path.abspath(params.features_path)
+    assert os.path.exists(in_features_path), "Given features file doesn't exist."
 
     groups_path = os.path.abspath(params.groups_path)
     assert os.path.exists(groups_path), "Given groups file doesn't exist."
 
-    return features_path, groups_path, params.weight_method, params.num_bins, \
-           params.trim_outliers, params.trim_percentile, params.return_networkx_graph, weights_out_path
+    return in_features_path, groups_path, params.weight_method, params.num_bins, \
+           params.trim_outliers, params.trim_percentile, params.return_networkx_graph, params.out_weights_path
 
 
 if __name__ == '__main__':
