@@ -33,8 +33,8 @@ semi_metric_list = [
 
 minimum_num_bins = 5
 
-default_weight_method = 'kullback_leibler'
-default_num_bins = 100
+default_weight_method = 'manhattan'
+default_num_bins = 25
 default_trim_percentile = 5
 
 def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
@@ -53,8 +53,8 @@ def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
     return edges
 
 
-def extract(features, groups, weight_method='histogram_intersection',
-            num_bins=default_num_bins, trim_outliers=True, trim_percentile=5,
+def extract(features, groups, weight_method= default_weight_method,
+            num_bins=default_num_bins, trim_outliers=True, trim_percentile=default_trim_percentile,
             return_networkx_graph=False, out_weights_path=None):
     """
     Extracts the histogram weighted network.
@@ -83,6 +83,7 @@ def extract(features, groups, weight_method='histogram_intersection',
         'cosine_1', 'chebyshev_neg', 'correlate_1', 'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation',
         'noelle_1', 'noelle_3'] and the rest are similarity functions:
             ['histogram_intersection', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
+        Default: 'minowski'.
     num_bins : scalar, optional
         Number of bins to use when computing histogram within each patch/group.
         Note:
@@ -261,6 +262,11 @@ def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, tri
 def _type_cast_parameters(num_bins, features, groups):
     """Casting inputs to required types."""
 
+    if isinstance(num_bins,basestring):
+        # possible when called from CLI
+        num_bins = np.float(num_bins)
+
+    # rounding it to ensure it is int
     num_bins = np.rint(num_bins)
 
     if np.isnan(num_bins) or np.isinf(num_bins):
@@ -362,22 +368,24 @@ def __parse_args():
                         help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
 
     if len(sys.argv) < 2:
-        print('Too few arguments!')
         parser.print_help()
+        warnings.warn('Too few arguments!', UserWarning)
         parser.exit(1)
 
     # parsing
     try:
         params = parser.parse_args()
-    except:
-        parser.exit(1)
+    except Exception as exc:
+        print(exc)
+        raise ValueError('Unable to parse command-line arguments.')
 
-    # noinspection PyUnboundLocalVariable
-    in_features_path = os.path.abspath(params.features_path)
-    assert os.path.exists(in_features_path), "Given features file doesn't exist."
+    in_features_path = os.path.abspath(params.in_features_path)
+    if not os.path.exists(in_features_path):
+        raise IOError("Given features file doesn't exist.")
 
     groups_path = os.path.abspath(params.groups_path)
-    assert os.path.exists(groups_path), "Given groups file doesn't exist."
+    if not os.path.exists(groups_path):
+        raise IOError("Given groups file doesn't exist.")
 
     return in_features_path, groups_path, params.weight_method, params.num_bins, \
            params.trim_outliers, params.trim_percentile, params.return_networkx_graph, params.out_weights_path

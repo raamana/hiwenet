@@ -1,11 +1,12 @@
 import sys
 import os
-
+import shlex
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
 from hiwenet import extract as hiwenet
+from hiwenet import __run as CLI
 
 sys.dont_write_bytecode = True
 
@@ -70,6 +71,10 @@ def test_trim_not_too_few_values():
     with raises(ValueError):
         ew = hiwenet( [0], [1], trim_outliers = False)
 
+def test_trim_false_too_few_to_calc_range():
+    with raises(ValueError):
+        ew = hiwenet( [1], groups, trim_outliers = False)
+
 def test_not_np_arrays():
     with raises(ValueError):
         ew = hiwenet(list(), groups, trim_percentile=101)
@@ -96,3 +101,62 @@ def test_return_nx_graph():
 def test_extreme_skewed():
     # Not yet sure what to test for here!!
     ew = hiwenet(10+np.zeros(dimensionality), groups)
+
+
+# CLI tests
+def test_CLI_run():
+    "function to hit the CLI lines."
+
+    # first word is the script names (ignored)
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    featrs_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'features_1000.txt'))
+    groups_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'groups_1000.txt'))
+    sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
+    CLI()
+
+def test_CLI_nonexisting_paths():
+    "invalid paths"
+
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    featrs_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'features_1000.txt'))
+    groups_path = 'NONEXISTING_groups_1000.txt'
+    sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
+    with raises(IOError):
+        CLI()
+
+    featrs_path = 'NONEXISTING_features_1000.txt'
+    groups_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'groups_1000.txt'))
+    sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
+    with raises(IOError):
+        CLI()
+
+
+def test_CLI_invalid_args():
+    "invalid paths"
+
+    featrs_path = 'NONEXISTING_features_1000.txt'
+    # arg aaa or invalid_arg_name doesnt exist
+    sys.argv = shlex.split('hiwenet --aaa {0} -f {0} -g {0}'.format(featrs_path))
+    with raises(SystemExit):
+        CLI()
+
+    sys.argv = shlex.split('hiwenet --invalid_arg_name {0} -f {0} -g {0}'.format(featrs_path))
+    with raises(SystemExit):
+        CLI()
+
+
+def test_CLI_too_few_args():
+    "testing too few args"
+
+    sys.argv = ['hiwenet ']
+    with raises(SystemExit):
+        CLI()
+
+    sys.argv = ['hiwenet -f check']
+    with raises(SystemExit):
+        CLI()
+
+    sys.argv = ['hiwenet -g check']
+    with raises(SystemExit):
+        CLI()
+
