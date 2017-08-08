@@ -1,8 +1,7 @@
-import sys
-import os
 import argparse
+import os
+import sys
 import warnings
-import nibabel
 import networkx as nx
 import numpy as np
 
