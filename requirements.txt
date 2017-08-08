@@ -3,3 +3,4 @@ medpy
 hypothesis
 networkx
 matplotlib
+codecov
