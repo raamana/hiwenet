@@ -5,6 +5,7 @@ python:
 
 install:
   - pip install -r requirements.txt
+  - pip install pytest-cov
 
 script:
   - pytest --cov=. --hypothesis-show-statistics
