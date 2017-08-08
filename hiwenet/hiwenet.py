@@ -16,13 +16,12 @@ list_medpy_histogram_metrics = np.array([
     'relative_bin_deviation', 'relative_deviation'])
 
 metric_list = [
-    'kullback_leibler', 'manhattan', 'minowski', 'euclidean',
-    'cosine_1',
+    'manhattan', 'minowski', 'euclidean',
     'noelle_2', 'noelle_4', 'noelle_5' ]
 
 unknown_prop_list = ['histogram_intersection']
 still_under_dev = ['quadratic_forms']
-similarity_func = ['correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
+similarity_func = [ 'kullback_leibler', 'cosine_1', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
 
 semi_metric_list = [
     'jensen_shannon', 'chi_square',
