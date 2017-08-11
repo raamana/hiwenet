@@ -122,3 +122,8 @@ scores = cross_val_score(rf, edge_weights, subject_labels)
 If you found it useful for your research, please cite it as:
 
  * Pradeep Reddy Raamana. (Version 2). Histogram-weighted Networks for Feature Extraction, Connectivity and Advanced Analysis in Neuroscience. Zenodo. http://doi.org/10.5281/zenodo.839995
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/raamana/hiwenet/badge.svg?style=beer-square)](https://beerpay.io/raamana/hiwenet)  [![Beerpay](https://beerpay.io/raamana/hiwenet/make-wish.svg?style=flat-square)](https://beerpay.io/raamana/hiwenet?focus=wish)
