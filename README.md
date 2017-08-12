@@ -18,10 +18,8 @@ Rough scheme of computation is shown below:
 Although this technique was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All you need is a set of nodes/parcellation that has one-to-one correspondence across samples/subjects in your dataset.
 
 ## References
-A publication outlining one use case is here:
-[Raamana, P.R. and Strother, S.C., 2016, June. Novel histogram-weighted cortical thickness networks and a multi-scale analysis of predictive power in Alzheimer's disease. In Pattern Recognition in Neuroimaging (PRNI), 2016 International Workshop on (pp. 1-4). IEEE.](http://ieeexplore.ieee.org/abstract/document/7552334/)
 
-Another poster describing it can be found here: https://doi.org/10.6084/m9.figshare.5241616
+* A preprint outlining the use case: Raamana, P.R. and Strother, S.C., 2017, *Impact of spatial scale and edge weight on predictive power of cortical thickness networks* bioRxiv 170381 http://www.biorxiv.org/content/early/2017/07/31/170381. doi: https://doi.org/10.1101/170381 
 
 ## Installation
 
@@ -124,3 +122,8 @@ scores = cross_val_score(rf, edge_weights, subject_labels)
 If you found it useful for your research, please cite it as:
 
  * Pradeep Reddy Raamana. (Version 2). Histogram-weighted Networks for Feature Extraction, Connectivity and Advanced Analysis in Neuroscience. Zenodo. http://doi.org/10.5281/zenodo.839995
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/raamana/hiwenet/badge.svg?style=beer-square)](https://beerpay.io/raamana/hiwenet)  [![Beerpay](https://beerpay.io/raamana/hiwenet/make-wish.svg?style=flat-square)](https://beerpay.io/raamana/hiwenet?focus=wish)
