@@ -1,2 +1,2 @@
 
-all = ['hiwenet']
+all = ['extract', 'hiwenet']

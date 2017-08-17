@@ -32,9 +32,7 @@ def make_features(dimensionality, num_groups):
 features, groups, group_ids, num_groups = make_features(dimensionality, num_groups)
 num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
 
-# the following tests are mostly usage tests
-# scientific validity of histogram metrics need to be achieved via testing of medpy
-# DISCLAIMER: so results are only as valid as the tests in medpy.metric.histogram
+# the following are mostly usage tests. Refer to test_medpy.py for scientific validity of histogram metrics
 
 def test_dimensions():
     ew = hiwenet(features, groups)
