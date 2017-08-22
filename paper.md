@@ -19,6 +19,7 @@ affiliations:
  - name: Department of Medical Biophysics, University of Toronto, Toronto, ON, Canada
    index: 2
 date: 21 August 2017
+doi: 10.5281/zenodo.839995
 bibliography: paper.bib
 ---
 
