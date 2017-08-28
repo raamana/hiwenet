@@ -1,6 +1,6 @@
 Hello there! 
 
-Thank you for the checking out `hiwenet`, and for your interest in contributing. 
+Thank you for the checking out `hiwenet`, and for your interest in contributing. Please check the following guidelines for contributing: http://contribution-guide-org.readthedocs.io/
 
 You could contribute in the areas, including but not limited to:
  * identifying any bugs by focusing on the areas of hiwenet that you have expertise in 
@@ -13,8 +13,6 @@ You could contribute in the areas, including but not limited to:
    * building an API-like interface for programmatic access, 
    * ideas for integration with other use cases
  
+ Thank you again for your interest. Appreciate your contribution in all its forms.
  
  *Under construction*
- 
- 
- To be improved and completed.
