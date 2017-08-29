@@ -1,5 +1,6 @@
 # Histogram-weighted Networks (hiwenet)
 
+[![status](http://joss.theoj.org/papers/df10a3a527fe169447a64c0cc810ff3c/status.svg)](http://joss.theoj.org/papers/df10a3a527fe169447a64c0cc810ff3c)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.839995.svg)](https://doi.org/10.5281/zenodo.839995)
 [![travis](https://travis-ci.org/raamana/hiwenet.svg?branch=master)](https://travis-ci.org/raamana/hiwenet.svg?branch=master)
 [![Code Health](https://landscape.io/github/raamana/hiwenet/master/landscape.svg?style=flat)](https://landscape.io/github/raamana/hiwenet/master)
