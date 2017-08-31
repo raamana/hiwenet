@@ -85,7 +85,7 @@ If you found it useful for your research, please cite it as:
 
 * A preprint outlining the use case is noted below. 
   * Raamana, P.R. and Strother, S.C., 2017, *Impact of spatial scale and edge weight on predictive power of cortical thickness networks* bioRxiv 170381 http://www.biorxiv.org/content/early/2017/07/31/170381. doi: https://doi.org/10.1101/170381 
-  * Please be advised this preprint is simply a concrete example of how toolboxes like `hiwenet` are used in a real world research project and the results therein were produced using different codebase (older version in matlab), not this package. This package was conceived as the research for the preprint is finalized and the value of python-based package is realized.
+  * Please be advised this preprint is simply a concrete example of how toolboxes like `hiwenet` are used in a real world research project and the results therein were produced using different codebase (older version in matlab [shared here](https://github.com/raamana/hiwenet/tree/master/matlab_code)), not this package. The results from the two packages are not  guaranteed to match, although we do not expect to have any differences given uncomplicated nature of the covariance computation. This package was conceived as the research for the preprint is finalized and the value of python-based package is realized.
 
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
