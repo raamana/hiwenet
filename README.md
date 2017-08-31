@@ -37,7 +37,7 @@ This package computes single-subject networks, hence you may need loop over samp
 A rough example of usage can be:
 
 ```python
-from hiwenet
+import hiwenet
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 import numpy as np
@@ -50,11 +50,11 @@ import os
 
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
-  edge_weights_subject = hiwenet.extract(features, groups,  weight_method = 'kullback_leibler')
-  edge_weights[ss,:] = upper_tri_vec(edge_weights_subject)
+  edge_weight_matrix = hiwenet.extract(features, groups,  weight_method = 'kullback_leibler')
+  edge_weights_vec[ss,:] = upper_tri_vec(edge_weight_matrix)
   
   out_file = os.path.join(out_folder, 'hiwenet_{}.txt'.format(subject))
-  np.save(out_file, edge_weights_subject)
+  np.save(out_file, edge_weight_matrix)
   
   
 # proceed to analysis
@@ -62,7 +62,7 @@ for ss, subject in enumerate(subject_list):
 
 # very rough example for training/evaluating a classifier
 rf = RandomForestClassifier(oob_score = True)
-scores = cross_val_score(rf, edge_weights, subject_labels)
+scores = cross_val_score(rf, edge_weights_vec, subject_labels)
 
 
 ```
