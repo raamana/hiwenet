@@ -30,6 +30,12 @@ Although this technique was originally developed for cortical thickness, this is
 
 As you continue to use or run into issues, try `pip install -U hiwenet` to get the latest bug-fixes, new features and optimized performance. 
 
+#### verison compatiblity
+
+I plan to support all version of python. However, only python 2.7 is currently tested for support automatically as part of continuous integration. Support for Python 3+ will be coming shortly. 
+
+There is nothing in this package that is exotic for it to break across multiple versions of Python, however it's not automatically tested. If you would like to contribute to broaden compatibility, that's be appreciated.
+
 ## Usage
 
 This package computes single-subject networks, hence you may need loop over samples/subjects in your dataset to extract them for all the samples/subjects, and them proceed to your subsequent analysis (such as classification etc).
