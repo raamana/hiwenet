@@ -15,9 +15,11 @@ Network-level analysis of various features, esp. if it can be individualized for
 Rough scheme of computation is shown below:
 ![illustration](docs/illustration.png)
 
-**Note on applicability** 
+## Applicability and target audience
 
-Although this technique was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All you need is a set of nodes/parcellation that has one-to-one correspondence across samples/subjects in your dataset.
+Although this technique was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All that is needed is a set of nodes/parcellation that have one-to-one correspondence across samples/subjects in your dataset.
+
+The target audience is users of almost all neuroimaging modalities who 1) preprocessed dataset already, 2) have some base features (node- or patch-wise, that are native to the given modality) extracted using other packages (metioned above), and 3) who would like to analyze network-level or covariance-type or connectivity relations among the base features.
 
 ## Installation
 
