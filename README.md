@@ -25,9 +25,10 @@ Although this technique was originally developed for cortical thickness, this is
 
 ## Installation
 
-`pip install -U hiwenet`
+`pip install hiwenet`
 
-I don't expect the core compuation to change at all, but it's always a good idea to update regularly (-U is key in the above command) to ensure you get all the bug-fixes, new features and optimized performance. 
+
+As you continue to use or run into issues, try `pip install -U hiwenet` to get the latest bug-fixes, new features and optimized performance. 
 
 ## Usage
 
