@@ -1,6 +1,6 @@
 #~/usr/bin/env python
 
-from hiwenet
+import hiwenet
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 import numpy as np
@@ -24,6 +24,7 @@ atlas = 'fsaverage'
 
 def get_parcellation(atlas, parcel_param):
     "Placeholder to insert your own function to return parcellation in reference space."
+    
     parc_path = os.path.join(atlas, 'parcellation_param{}.mgh'.format(parcel_param))
     parcel = nibabel.freesurfer.io.read_geometry(parc_path)
     
@@ -34,7 +35,7 @@ groups = get_parcellation(atlas, feature_dimensionality)
 
 out_folder = os.path.join(my_project, 'hiwenet')
 
-# choose a method from one among the three groups (metrics, semi-metrics and similarity functions)
+# choose a method from one from among the three groups (metrics, semi-metrics and similarity functions)
 metrics = [ 'manhattan', 'minowski', 'euclidean', 'noelle_2', 'noelle_4', 'noelle_5' ]
 
 semi_metric_list = [
@@ -50,6 +51,7 @@ similarity_func = ['correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_ba
 
 def get_features(subject_id):
     "Placeholder to insert your own function to read subject-wise features."
+    
     features_path = os.path.join(my_project,'base_features', subject_id, 'features.txt')
     feature_vector = np.loadtxt(features_path)
     
@@ -65,17 +67,16 @@ def upper_tri_vec(matrix):
     
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
-  edge_weights_subject = hiwenet.extract(features, groups,  weight_method = 'kullback_leibler')
-  edge_weights[ss,:] = upper_tri_vec(edge_weights_subject)
+  edge_weight_matrix = hiwenet.extract(features, groups,  weight_method = 'kullback_leibler')
+  edge_weights_vec[ss,:] = upper_tri_vec(edge_weight_matrix)
   
   out_file = os.path.join(out_folder, 'hiwenet_{}.txt'.format(subject))
-  np.save(out_file, edge_weights_subject)
+  np.save(out_file, edge_weight_matrix)
   
   
 # proceed to analysis
 
-
 # very rough example for training/evaluating a classifier
 rf = RandomForestClassifier(oob_score = True)
-scores = cross_val_score(rf, edge_weights, subject_labels)
-
+scores = cross_val_score(rf, edge_weights_vec, subject_labels)
+  
