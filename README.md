@@ -19,10 +19,6 @@ Rough scheme of computation is shown below:
 
 Although this technique was originally developed for cortical thickness, this is a generic and powerful technique that could be applied to any features such as gray matter density, PET uptake values, functional activation data or EEG features. All you need is a set of nodes/parcellation that has one-to-one correspondence across samples/subjects in your dataset.
 
-## References
-
-* A preprint outlining the use case: Raamana, P.R. and Strother, S.C., 2017, *Impact of spatial scale and edge weight on predictive power of cortical thickness networks* bioRxiv 170381 http://www.biorxiv.org/content/early/2017/07/31/170381. doi: https://doi.org/10.1101/170381 
-
 ## Installation
 
 `pip install hiwenet`
@@ -73,7 +69,7 @@ scores = cross_val_score(rf, edge_weights_vec, subject_labels)
 
 ```
 
-A longer version of this example with full details and concrete details is available [here](docs/example_thickness_hiwenet.py).
+A longer version of this example with concrete details is available [here](docs/example_thickness_hiwenet.py).
 
 
 ## Citation
@@ -81,6 +77,13 @@ A longer version of this example with full details and concrete details is avail
 If you found it useful for your research, please cite it as:
 
  * Pradeep Reddy Raamana. (Version 2). Histogram-weighted Networks for Feature Extraction, Connectivity and Advanced Analysis in Neuroscience. Zenodo. http://doi.org/10.5281/zenodo.839995
+
+
+## References
+
+* A preprint outlining the use case is noted below. 
+  * Raamana, P.R. and Strother, S.C., 2017, *Impact of spatial scale and edge weight on predictive power of cortical thickness networks* bioRxiv 170381 http://www.biorxiv.org/content/early/2017/07/31/170381. doi: https://doi.org/10.1101/170381 
+  * Please be advised this preprint is simply a concrete example of how toolboxes like `hiwenet` are used in a real world research project and the results therein were produced using different codebase (older version in matlab), not this package. This package was conceived as the research for the preprint is finalized and the value of python-based package is realized.
 
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
