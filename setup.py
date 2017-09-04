@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='hiwenet',
-      version='0.2.2',
+      version='0.2.4',
       description='Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience',
       long_description='Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience; hiwenet',
       author='Pradeep Reddy Raamana',

@@ -1,5 +1,5 @@
 
-__all__ = ['extract']
+__all__ = ['extract', 'run_cli']
 
 import argparse
 import os
@@ -304,7 +304,7 @@ def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, 
     return features, groups, num_bins, weight_method, group_ids, num_groups, num_links
 
 
-def __run():
+def run_cli():
     "Main entry point from the command line."
 
     features_path, groups_path, weight_method, num_bins, \
@@ -397,4 +397,4 @@ def __parse_args():
 
 
 if __name__ == '__main__':
-    __run()
+    run_cli()
