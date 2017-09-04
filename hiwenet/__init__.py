@@ -1,4 +1,4 @@
 
-from hiwenet import extract
+from hiwenet.hiwenet import extract
 
 __all__ = ['extract', 'hiwenet']

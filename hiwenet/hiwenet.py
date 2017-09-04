@@ -1,3 +1,6 @@
+
+__all__ = ['extract']
+
 import argparse
 import os
 import sys
@@ -127,11 +130,13 @@ def extract(features, groups, weight_method= default_weight_method,
         edge_weights = np.zeros([num_groups, num_groups], order='F')
 
     exceptions_list = list()
-    for g1 in xrange(num_groups):
+    for g1 in range(num_groups):
+        if np.mod(g1+1,5) == 0.0:
+            sys.stdout.write('.')
         index1 = groups == group_ids[g1]
         hist_one = __compute_histogram(features[index1], edges)
 
-        for g2 in xrange(g1 + 1, num_groups, 1):
+        for g2 in range(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
             hist_two = __compute_histogram(features[index2], edges)
 
@@ -262,7 +267,7 @@ def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, tri
 def _type_cast_parameters(num_bins, features, groups):
     """Casting inputs to required types."""
 
-    if isinstance(num_bins,basestring):
+    if isinstance(num_bins,str):
         # possible when called from CLI
         num_bins = np.float(num_bins)
 
@@ -310,12 +315,12 @@ def __run():
     # -w could take multiple values kldiv,histint,
     # each line: input_features_path,out_weights_path
 
-    features, groups = __read_features_groups(features_path, groups_path)
+    features, groups = __read_features_and_groups(features_path, groups_path)
 
     extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph, out_weights_path)
 
 
-def __read_features_groups(features_path, groups_path):
+def __read_features_and_groups(features_path, groups_path):
     "Reader for data and groups"
 
     try:

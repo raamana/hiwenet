@@ -6,7 +6,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from hiwenet import extract as hiwenet
-from hiwenet import __run as CLI
+from hiwenet.hiwenet import __run as CLI
 
 sys.dont_write_bytecode = True
 
