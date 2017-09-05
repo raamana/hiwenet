@@ -329,7 +329,8 @@ def __read_features_and_groups(features_path, groups_path):
     except:
         raise IOError('error reading the specified features and/or groups.')
 
-    assert len(features) == len(groups), "lengths of features and groups do not match!"
+    if len(features) != len(groups):
+        raise ValueError("lengths of features and groups do not match!")
 
     return features, groups
 
