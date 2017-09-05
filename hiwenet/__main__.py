@@ -1,9 +1,9 @@
-import hiwenet
+from hiwenet.hiwenet import run_cli
 
 def main():
     "Entry point."
 
-    hiwenet.run_cli()
+    run_cli()
 
 if __name__ == '__main__':
     main()
