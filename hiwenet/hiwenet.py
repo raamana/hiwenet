@@ -1,4 +1,3 @@
-
 __all__ = ['extract', 'run_cli']
 
 import argparse
@@ -20,11 +19,11 @@ list_medpy_histogram_metrics = np.array([
 
 metric_list = [
     'manhattan', 'minowski', 'euclidean',
-    'noelle_2', 'noelle_4', 'noelle_5' ]
+    'noelle_2', 'noelle_4', 'noelle_5']
 
 unknown_prop_list = ['histogram_intersection']
 still_under_dev = ['quadratic_forms']
-similarity_func = [ 'kullback_leibler', 'cosine_1', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
+similarity_func = ['kullback_leibler', 'cosine_1', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
 
 semi_metric_list = [
     'jensen_shannon', 'chi_square',
@@ -39,6 +38,7 @@ minimum_num_bins = 5
 default_weight_method = 'manhattan'
 default_num_bins = 25
 default_trim_percentile = 5
+
 
 def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
@@ -56,7 +56,7 @@ def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
     return edges
 
 
-def extract(features, groups, weight_method= default_weight_method,
+def extract(features, groups, weight_method=default_weight_method,
             num_bins=default_num_bins, trim_outliers=True, trim_percentile=default_trim_percentile,
             return_networkx_graph=False, out_weights_path=None):
     """
@@ -131,7 +131,7 @@ def extract(features, groups, weight_method= default_weight_method,
 
     exceptions_list = list()
     for g1 in range(num_groups):
-        if np.mod(g1+1,5) == 0.0:
+        if np.mod(g1 + 1, 5) == 0.0:
             sys.stdout.write('.')
         index1 = groups == group_ids[g1]
         hist_one = __compute_histogram(features[index1], edges)
@@ -149,16 +149,17 @@ def extract(features, groups, weight_method= default_weight_method,
             except BaseException as exc:
                 # numerical instabilities can cause trouble for histogram distance calculations
                 exceptions_list.append(str(exc))
-                warnings.warn('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1], group_ids[g2]))
+                warnings.warn('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1],
+                                                                                                     group_ids[g2]))
 
     error_thresh = 0.05
-    if len(exceptions_list) >= error_thresh*num_links:
+    if len(exceptions_list) >= error_thresh * num_links:
         print('All exceptions encountered so far:\n {}'.format('\n'.join(exceptions_list)))
-        raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh*100))
+        raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh * 100))
 
     if return_networkx_graph:
         if out_weights_path is not None:
-           nx_graph.write_graphml(out_weights_path) 
+            nx_graph.write_graphml(out_weights_path)
         return nx_graph
     else:
         if out_weights_path is not None:
@@ -267,7 +268,7 @@ def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, tri
 def _type_cast_parameters(num_bins, features, groups):
     """Casting inputs to required types."""
 
-    if isinstance(num_bins,str):
+    if isinstance(num_bins, str):
         # possible when called from CLI
         num_bins = np.float(num_bins)
 
@@ -308,8 +309,8 @@ def run_cli():
     "Main entry point from the command line."
 
     features_path, groups_path, weight_method, num_bins, \
-        trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = __parse_args()
-    
+    trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = __parse_args()
+
     # TODO add the possibility to process multiple combinations of parameters: diff subjects, diff metrics
     # for features_path to be a file containing multiple subjects (one/line)
     # -w could take multiple values kldiv,histint,
@@ -317,7 +318,8 @@ def run_cli():
 
     features, groups = __read_features_and_groups(features_path, groups_path)
 
-    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph, out_weights_path)
+    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph,
+            out_weights_path)
 
 
 def __read_features_and_groups(features_path, groups_path):
@@ -349,15 +351,16 @@ def __parse_args():
                         help="path to a file containing element-wise membership into groups/nodes/patches.")
 
     parser.add_argument("-w", "--weight_method", action="store", dest="weight_method",
-                        default= default_weight_method, required=False,
-                        help="Method used to estimate the weight between the pair of nodes. Default : {}".format(default_weight_method))
+                        default=default_weight_method, required=False,
+                        help="Method used to estimate the weight between the pair of nodes. Default : {}".format(
+                            default_weight_method))
 
     parser.add_argument("-o", "--out_weights_path", action="store", dest="out_weights_path",
-                        required=False, default = None,
+                        required=False, default=None,
                         help="Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.")
 
     parser.add_argument("-n", "--num_bins", action="store", dest="num_bins",
-                        default= minimum_num_bins, required=False,
+                        default=minimum_num_bins, required=False,
                         help="Number of bins used to construct the histogram. Default : {}".format(minimum_num_bins))
 
     parser.add_argument("-t", "--trim_outliers", action="store", dest="trim_outliers",
@@ -365,7 +368,7 @@ def __parse_args():
                         help="Boolean flag indicating whether to trim the extreme/outlying values. Default True.")
 
     parser.add_argument("-p", "--trim_percentile", action="store", dest="trim_percentile",
-                        default= default_trim_percentile, required=False,
+                        default=default_trim_percentile, required=False,
                         help="Small value specifying the percentile of outliers to trim. "
                              "Default: {0}%% , must be in open interval (0, 100).".format(default_trim_percentile))
 
