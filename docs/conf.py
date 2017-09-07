@@ -23,15 +23,15 @@ sys.path.insert(0, os.path.abspath('../hiwenet'))
 
 import sphinx_rtd_theme
 
-from unittest.mock import MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return MagicMock()
-
-MOCK_MODULES = [ 'argparse', 'numpy', 'numpydoc']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+# from unittest.mock import MagicMock
+#
+# class Mock(MagicMock):
+#     @classmethod
+#     def __getattr__(cls, name):
+#             return MagicMock()
+#
+# MOCK_MODULES = [ 'argparse', 'numpy', 'numpydoc']
+# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- General configuration ------------------------------------------------
 
