@@ -2,3 +2,8 @@ numpy
 numpydoc
 sphinx-argparse
 networkx
+medpy
+hypothesis
+networkx
+matplotlib
+codecov
