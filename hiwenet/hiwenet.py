@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import warnings
+import logging
 import networkx as nx
 import numpy as np
 
@@ -74,19 +75,67 @@ def extract(features, groups, weight_method=default_weight_method,
         but this could also be a list of strings of length p, in which case a tuple is
         returned identifying which weight belongs to which pair of patches.
     weight_method : string, optional
-        identifying the type of distance (or metric) to compute between the pair of histograms.
-        It must be one of the methods implemented in medpy.metric.histogram: 
-        [ 'chebyshev', 'chebyshev_neg', 'chi_square', 'correlate', 'correlate_1', 
-        'cosine', 'cosine_1', 'cosine_2', 'cosine_alt', 'euclidean', 'fidelity_based',
-        'histogram_intersection', 'histogram_intersection_1', 'jensen_shannon', 'kullback_leibler', 
-        'manhattan', 'minowski', 'noelle_1', 'noelle_2', 'noelle_3', 'noelle_4', 'noelle_5', 
-        'relative_bin_deviation', 'relative_deviation'] except 'quadratic_forms'.
-        Note only the following are metrics: ['manhattan', 'minowski', 'euclidean', 'noelle_2', 'noelle_4', 'noelle_5'],
-        the following are semi- or quasi-metrics: [ 'kullback_leibler', 'jensen_shannon', 'chi_square', 'chebyshev',
-        'cosine_1', 'chebyshev_neg', 'correlate_1', 'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation',
-        'noelle_1', 'noelle_3'] and the rest are similarity functions:
-            ['histogram_intersection', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
-        Default: 'minowski'.
+        Type of distance (or metric) to compute between the pair of histograms.
+
+        It must be one of the following methods:
+
+        - 'chebyshev'
+        - 'chebyshev_neg'
+        - 'chi_square'
+        - 'correlate'
+        - 'correlate_1'
+        - 'cosine'
+        - 'cosine_1'
+        - 'cosine_2'
+        - 'cosine_alt'
+        - 'euclidean'
+        - 'fidelity_based'
+        - 'histogram_intersection'
+        - 'histogram_intersection_1'
+        - 'jensen_shannon'
+        - 'kullback_leibler'
+        - 'manhattan'
+        - 'minowski'
+        - 'noelle_1'
+        - 'noelle_2'
+        - 'noelle_3'
+        - 'noelle_4'
+        - 'noelle_5'
+        - 'relative_bin_deviation'
+        - 'relative_deviation'
+
+        Note only the following are metrics:
+        - 'manhattan'
+        - 'minowski'
+        - 'euclidean'
+        - 'noelle_2'
+        - 'noelle_4'
+        - 'noelle_5'
+
+        The following are semi- or quasi-metrics:
+        - 'kullback_leibler'
+        - 'jensen_shannon'
+        - 'chi_square'
+        - 'chebyshev'
+        - 'cosine_1'
+        - 'chebyshev_neg'
+        - 'correlate_1'
+        - 'histogram_intersection_1'
+        - 'relative_deviation'
+        - 'relative_bin_deviation'
+        - 'noelle_1'
+        - 'noelle_3'
+
+        The following are  classified to be similarity functions:
+        - 'histogram_intersection'
+        - 'correlate'
+        - 'cosine'
+        - 'cosine_2'
+        - 'cosine_alt'
+        - 'fidelity_based'
+
+        *Default* choice: 'minowski'.
+
     num_bins : scalar, optional
         Number of bins to use when computing histogram within each patch/group.
         Note:
@@ -149,13 +198,13 @@ def extract(features, groups, weight_method=default_weight_method,
             except BaseException as exc:
                 # numerical instabilities can cause trouble for histogram distance calculations
                 exceptions_list.append(str(exc))
-                warnings.warn('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1],
+                logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1],
                                                                                                      group_ids[g2]))
 
     error_thresh = 0.05
     if len(exceptions_list) >= error_thresh * num_links:
         print('All exceptions encountered so far:\n {}'.format('\n'.join(exceptions_list)))
-        raise ValueError('Weights for {:.2f}% of edges could not be computed.'.format(error_thresh * 100))
+        raise ValueError('Weights for atleast {:.2f}% of edges could not be computed.'.format(error_thresh * 100))
 
     if return_networkx_graph:
         if out_weights_path is not None:
