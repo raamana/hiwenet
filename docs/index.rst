@@ -30,6 +30,7 @@ Hiwenet helps you extracts histogram-distance weighted networks for feature extr
    installation
    API
    usage
+   guidelines
    metrics
 
 

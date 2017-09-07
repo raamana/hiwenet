@@ -7,6 +7,8 @@ Them proceed to your typical subsequent analysis (such as classification etc).
 
 A rough example of usage can be:
 
+.. TODO add examples to show how hiwenet can be used in place of ConnectomeMeasure of nilearn, or other uses in MNE.
+
 
 .. code-block:: python
 
