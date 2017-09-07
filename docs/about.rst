@@ -21,6 +21,11 @@ The target audience is users of almost all neuroimaging modalities who:
     4) This is similar to popular metrics of covariance like Correlation or LedoitWolf, and could be dropped in their place. Do you want to find out how histogram-based method compare to your own ideas?
 
 
-Check the :doc:`usage` and :doc:`API` pages, and let me know your comments.
+Check the :doc:`usage_api` and :doc:`API` pages, and let me know your comments.
 
 Thanks for checking out. Your feedback will be appreciated.
+
+Acknowledgements
+----------------
+
+I would like to thank Oscar Esteban (@oesteban) for his volunteering of significant effort and time to review this package in great detail and offer constructive feedback, which has been very helpful in improving the software.
