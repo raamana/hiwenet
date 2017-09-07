@@ -1,7 +1,7 @@
-numpy
+sphinx-argparse
 numpydoc
+numpy
 networkx
 hypothesis
 networkx
 matplotlib
-sphinx-argparse

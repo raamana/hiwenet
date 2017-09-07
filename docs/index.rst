@@ -29,7 +29,8 @@ Hiwenet helps you extracts histogram-distance weighted networks for feature extr
    about
    installation
    API
-   usage
+   usage_api
+   usage_cli
    guidelines
    metrics
 
