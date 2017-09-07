@@ -63,8 +63,9 @@ def upper_tri_vec(matrix):
     
     triu_idx = np.triu_indices_from(matrix, 1)
     return matrix[triu_idx]
-    
-    
+
+num_links = num_ROIs*(num_ROIs-1)/2.0
+edge_weights_vec = np.zeros(len(subject_list), num_links)
 for ss, subject in enumerate(subject_list):
   features = get_features(subject)
   edge_weight_matrix = hiwenet.extract(features, groups,  weight_method = 'kullback_leibler')
