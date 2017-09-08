@@ -40,7 +40,8 @@ The target audience is users of almost all neuroimaging modalities who 1) prepro
 
  - This packages takes in vector of features and their membership labels (denoting which features belong to which groups - alternatively referred to as nodes in a graph), and computes their pair-wise histogram distances, using a chosen method.
  - This package is designed to be domain-agnostic, and hence a generic input format was chosen.
- - However, we plan to add interfaces to tools that may be of interest to researchers in specific domains such as nilearn, MNE and the related. A scikit-learn compatible API/interface is also in the works.
+ - This `hiwenet.extract` could be used to extract advance covariance/connectome features in place of [MNE.extract_label_time_course](http://martinos.org/mne/stable/generated/mne.SourceEstimate.html#mne.SourceEstimate.extract_label_time_course) or nilearn.input_data.NiftiLabelsMasker.transform - see [here](http://nilearn.github.io/connectivity/functional_connectomes.html#extracting-signals-on-a-parcellation) and [here](http://nilearn.github.io/modules/generated/nilearn.input_data.NiftiLabelsMasker.html#nilearn.input_data.NiftiLabelsMasker.transform). 
+ - However, we plan to add interfaces to tools e.g. via a scikit-learn compatible API/interface is also in the works. Stay tuned.
  - Refer to [examples](../examples) directory and the [docs](hiwenet.readthedocs.io) for more detailed and usage examples.
 
 # References
