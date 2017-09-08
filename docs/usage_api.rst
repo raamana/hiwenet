@@ -5,6 +5,11 @@ Examples using API
 This package computes single-subject networks, hence you may need loop over samples/subjects in your dataset to extract them for all the samples/subjects.
 Them proceed to your typical subsequent analysis (such as classification etc).
 
+Note: 
+
+ - The `hiwenet.extract` could be used to extract advance covariance/connectome features in place of `MNE.extract_label_time_course <http://martinos.org/mne/stable/generated/mne.SourceEstimate.html#mne.SourceEstimate.extract_label_time_course>`_ or nilearn.input_data.NiftiLabelsMasker.transform - see `here <http://nilearn.github.io/connectivity/functional_connectomes.html#extracting-signals-on-a-parcellation>`_ and `here <http://nilearn.github.io/modules/generated/nilearn.input_data.NiftiLabelsMasker.html#nilearn.input_data.NiftiLabelsMasker.transform>`_. 
+ - However, we plan to add interfaces to tools e.g. via a scikit-learn compatible API/interface is also in the works. Stay tuned.
+
 A rough example of usage when using the hiwenet API can be:
 
 .. TODO add examples to show how hiwenet can be used in place of ConnectomeMeasure of nilearn, or other uses in MNE.
