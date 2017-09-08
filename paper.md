@@ -36,6 +36,13 @@ Although this technique was originally developed for cortical thickness, this is
 
 The target audience is users of almost all neuroimaging modalities who 1) preprocessed dataset already, 2) have some base features (node- or patch-wise, that are native to the given modality) extracted using other packages (metioned above), and 3) who would like to analyze network-level or covariance-type or connectivity relations among the base features.
 
+# What does the hiwenet package do?
+
+ - This packages takes in vector of features and their membership labels (denoting which features belong to which groups - alternatively referred to as nodes in a graph), and computes their pair-wise histogram distances, using a chosen method.
+ - This package is designed to be domain-agnostic, and hence a generic input format was chosen.
+ - However, we plan to add interfaces to tools that may be of interest to researchers in specific domains such as nilearn, MNE and the related. A scikit-learn compatible API/interface is also in the works.
+ - Refer to [examples](examples) directory and the [docs](hiwenet.readthedocs.io) for more details usage examples.
+
 # References
 
  - Raamana, P.R. and Strother, S.C., 2017, *Impact of spatial scale and edge weight on predictive power of cortical thickness networks* bioRxiv 170381 http://www.biorxiv.org/content/early/2017/07/31/170381. doi: https://doi.org/10.1101/170381 
