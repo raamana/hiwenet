@@ -7,6 +7,7 @@ import warnings
 import logging
 import networkx as nx
 import numpy as np
+from os.path import join as pjoin, exists as pexists
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
@@ -67,11 +68,13 @@ def extract(features, groups,
     
     Parameters
     ----------
-    features : numpy 1d array
-        1d array of scalar values
+    features : ndarray or str
+        1d array of scalar values, either provided directly as a 1d numpy array,
+        or as a path to a file containing these values
 
-    groups : numpy 1d array
+    groups : ndarray or str
         Membership array of same length as `features`, each value specifying which group that particular node belongs to.
+        Input can be either provided directly as a 1d numpy array,or as a path to a file containing these values.
 
         For example, if you have cortical thickness values for 1000 vertices (`features` is ndarray of length 1000),
         belonging to 100 patches, the groups array (of length 1000) could  have numbers 1 to 100 (number of unique values)
@@ -236,7 +239,7 @@ def extract(features, groups,
         return nx_graph
     else:
         if out_weights_path is not None:
-            np.savetxt(out_weights_path, edge_weights)
+            np.savetxt(out_weights_path, edge_weights, delimiter=',', fmt='%.3f')
         return edge_weights
 
 
@@ -360,8 +363,13 @@ def _type_cast_parameters(num_bins, features, groups):
     return num_bins, features, groups
 
 
-def __parameter_check(features, groups, num_bins, weight_method, trim_outliers, trim_percentile):
+def __parameter_check(features_spec, groups_spec, num_bins, weight_method, trim_outliers, trim_percentile):
     """Necessary check on values, ranges, and types."""
+
+    if isinstance(features_spec, str) and isinstance(groups_spec, str):
+        features, groups = __read_features_and_groups(features_spec, groups_spec)
+    else:
+        features, groups = features_spec, groups_spec
 
     num_bins, features, groups = _type_cast_parameters(num_bins, features, groups)
     num_values = len(features)
@@ -399,8 +407,22 @@ def __read_features_and_groups(features_path, groups_path):
     "Reader for data and groups"
 
     try:
-        features = np.loadtxt(features_path)
-        groups = np.loadtxt(groups_path)
+        if not pexists(features_path):
+            raise ValueError('non-existent features file')
+
+        if not pexists(groups_path):
+            raise ValueError('non-existent groups file')
+
+        if isinstance(features_path, str):
+            features = np.genfromtxt(features_path, dtype=float)
+        else:
+            raise ValueError('features input must be a file path ')
+
+        if isinstance(groups_path, str):
+            groups = np.genfromtxt(groups_path, dtype=str)
+        else:
+            raise ValueError('groups input must be a file path ')
+
     except:
         raise IOError('error reading the specified features and/or groups.')
 
