@@ -28,7 +28,7 @@ bibliography: paper.bib
 Network-level analysis of various features, esp. if it can be individualized for a single-subject, is proving to be quite a valuable tool in many applications. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic). 
 
 Rough scheme of computation is shown below:
-![illustration](docs/illustration.png)
+![illustration](illustration.png)
 
 ## Note on applicability and target audience
 
@@ -41,7 +41,7 @@ The target audience is users of almost all neuroimaging modalities who 1) prepro
  - This packages takes in vector of features and their membership labels (denoting which features belong to which groups - alternatively referred to as nodes in a graph), and computes their pair-wise histogram distances, using a chosen method.
  - This package is designed to be domain-agnostic, and hence a generic input format was chosen.
  - However, we plan to add interfaces to tools that may be of interest to researchers in specific domains such as nilearn, MNE and the related. A scikit-learn compatible API/interface is also in the works.
- - Refer to [examples](examples) directory and the [docs](hiwenet.readthedocs.io) for more details usage examples.
+ - Refer to [examples](../examples) directory and the [docs](hiwenet.readthedocs.io) for more detailed and usage examples.
 
 # References
 

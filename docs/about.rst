@@ -20,8 +20,13 @@ The target audience is users of almost all neuroimaging modalities who:
     3) who would like to analyze network-level (i.e. covariance-type or connectivity) relations among the base features (either in space across the cortex or a relevant domain, or across time).
     4) This is similar to popular metrics of covariance like Correlation or LedoitWolf, and could be dropped in their place. Do you want to find out how histogram-based method compare to your own ideas?
 
+What does hiwenet do?
+---------------------------------
 
-Check the :doc:`usage_api` and :doc:`API` pages, and let me know your comments.
+ - This packages takes in vector of features and their membership labels (denoting which features belong to which groups - alternatively referred to as nodes in a graph), and computes their pair-wise histogram distances, using a chosen method.
+ - This package is designed to be domain-agnostic, and hence a generic input format was chosen.
+ - However, we plan to add interfaces to tools that may be of interest to researchers in specific domains such as nilearn, MNE and the related. A scikit-learn compatible API/interface is also in the works.
+ - Refer to :doc:`usage_api` and :doc:`API` pages for more detailed and usage examples, and `examples` directory for sample files.
 
 Thanks for checking out. Your feedback will be appreciated.
 
