@@ -40,7 +40,9 @@ minimum_num_bins = 5
 default_weight_method = 'manhattan'
 default_num_bins = 25
 default_trim_percentile = 5
-
+default_trim_behaviour = True
+default_return_networkx_graph = False
+default_out_weights_path = None
 
 def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
@@ -61,8 +63,10 @@ def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
 def extract(features, groups,
             weight_method=default_weight_method,
             num_bins=default_num_bins,
-            trim_outliers=True, trim_percentile=default_trim_percentile,
-            return_networkx_graph=False, out_weights_path=None):
+            trim_outliers=default_trim_behaviour,
+            trim_percentile=default_trim_percentile,
+            return_networkx_graph=default_return_networkx_graph,
+            out_weights_path=default_out_weights_path):
     """
     Extracts the histogram-distance weighted adjacency matrix.
     
@@ -239,7 +243,7 @@ def extract(features, groups,
         return nx_graph
     else:
         if out_weights_path is not None:
-            np.savetxt(out_weights_path, edge_weights, delimiter=',', fmt='%.3f')
+            np.savetxt(out_weights_path, edge_weights, delimiter=',', fmt='%.9f')
         return edge_weights
 
 
@@ -451,15 +455,15 @@ def __get_parser():
                             default_weight_method))
 
     parser.add_argument("-o", "--out_weights_path", action="store", dest="out_weights_path",
-                        required=False, default=None,
+                        default=default_out_weights_path, required=False,
                         help="Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.")
 
     parser.add_argument("-n", "--num_bins", action="store", dest="num_bins",
-                        default=minimum_num_bins, required=False,
-                        help="Number of bins used to construct the histogram. Default : {}".format(minimum_num_bins))
+                        default=default_num_bins, required=False,
+                        help="Number of bins used to construct the histogram. Default : {}".format(default_num_bins))
 
     parser.add_argument("-t", "--trim_outliers", action="store", dest="trim_outliers",
-                        default=True, required=False,
+                        default=default_trim_behaviour, required=False,
                         help="Boolean flag indicating whether to trim the extreme/outlying values. Default True.")
 
     parser.add_argument("-p", "--trim_percentile", action="store", dest="trim_percentile",
@@ -468,7 +472,7 @@ def __get_parser():
                              "Default: {0}%% , must be in open interval (0, 100).".format(default_trim_percentile))
 
     parser.add_argument("-r", "--return_networkx_graph", action="store", dest="return_networkx_graph",
-                        default=False, required=False,
+                        default=default_return_networkx_graph, required=False,
                         help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
 
     return parser

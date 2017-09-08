@@ -4,7 +4,7 @@ import shlex
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-
+from os.path import join as pjoin, exists as pexists, abspath
 from sys import version_info
 
 if version_info.major==2 and version_info.minor==7:
@@ -40,6 +40,8 @@ def make_features(dimensionality, num_groups):
 
 features, groups, group_ids, num_groups = make_features(dimensionality, num_groups)
 num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
+
+cur_dir = os.path.dirname(abspath(__file__))
 
 # the following are mostly usage tests. Refer to test_medpy.py for scientific validity of histogram metrics
 
@@ -115,24 +117,43 @@ def test_CLI_run():
     "function to hit the CLI lines."
 
     # first word is the script names (ignored)
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
-    featrs_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'features_1000.txt'))
-    groups_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'groups_1000.txt'))
+    
+    featrs_path = abspath(pjoin(cur_dir, '..', 'examples', 'features_1000.txt'))
+    groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'groups_1000.txt'))
     sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     CLI()
+
+def test_CLI_output_matches_API():
+    " Ensuring results from the two interfaces matches within a tolerance"
+
+    # turning groups into strings to correspond with CLI
+    groups_str = np.array([str(grp) for grp in groups])
+    api_result = hiwenet(features, groups_str, weight_method='cosine')
+    featrs_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_features.txt'))
+    groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_groups.txt'))
+    result_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_result.txt'))
+    np.savetxt(featrs_path, features, fmt='%20.9f')
+    np.savetxt(groups_path, groups,  fmt='%d')
+
+    sys.argv = shlex.split('hiwenet -f {} -g {} -o {} -w cosine'.format(featrs_path, groups_path, result_path))
+    CLI()
+    cli_result = np.genfromtxt(result_path, delimiter=',')
+
+    if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3)):
+        raise ValueError('CLI results differ from API.')
+
 
 def test_CLI_nonexisting_paths():
     "invalid paths"
 
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
-    featrs_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'features_1000.txt'))
+    featrs_path = abspath(pjoin(cur_dir, '..', 'examples', 'features_1000.txt'))
     groups_path = 'NONEXISTING_groups_1000.txt'
     sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     with raises(IOError):
         CLI()
 
     featrs_path = 'NONEXISTING_features_1000.txt'
-    groups_path = os.path.abspath(os.path.join(cur_dir, '..', 'examples', 'groups_1000.txt'))
+    groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'groups_1000.txt'))
     sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     with raises(IOError):
         CLI()
@@ -167,3 +188,4 @@ def test_CLI_too_few_args():
     with raises(SystemExit):
         CLI()
 
+test_CLI_output_matches_API()
