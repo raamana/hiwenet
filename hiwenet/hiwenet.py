@@ -201,6 +201,7 @@ def extract(features, groups,
         features, groups, num_bins, weight_method, trim_outliers, trim_percentile)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
+    # NOTE: common bin edges is important for the disances to be any meaningful
     edges = __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile)
 
     if return_networkx_graph:

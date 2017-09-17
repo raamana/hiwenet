@@ -1,6 +1,6 @@
 from sys import version_info
 
-if version_info.major==2 and version_info.minor==7 and version_info.micro==13:
+if version_info.major==2 and version_info.minor==7:
     from hiwenet import run_cli
 elif version_info.major > 2:
     from hiwenet.hiwenet import run_cli
