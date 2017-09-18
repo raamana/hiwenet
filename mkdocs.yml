@@ -1,0 +1,10 @@
+site_name: hiwenet
+site_description: 'Documentation for hiwenet'
+pages:
+  - Home: 'index.md'
+  - API Reference: 'api_ref.md'
+  - Examples:
+      - "api_usage.md"
+      - Command line usage: '../examples/CLI.md'
+  - Citation: "cite.md"
+theme: readthedocs
