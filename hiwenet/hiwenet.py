@@ -248,6 +248,9 @@ def extract(features, groups,
                     nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
                 else:
                     edge_weights[g1, g2] = edge_value
+            except (RuntimeError, RuntimeWarning) as runexc:
+                # placeholder to ignore some runtime errors (such as medpy's logger issue)
+                print(runexc)
             except BaseException as exc:
                 # numerical instabilities can cause trouble for histogram distance calculations
                 exceptions_list.append(str(exc))
