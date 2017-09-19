@@ -68,6 +68,26 @@ def test_invalid_trim_perc():
     with raises(ValueError):
         ew = hiwenet(features, groups, trim_percentile=101)
 
+def test_invalid_edge_range():
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, edge_range= -1)
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, edge_range=[])
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, edge_range=[1, ])
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, edge_range=[1, 2, 3])
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, edge_range=(1, np.NaN))
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, edge_range=(2, 1))
+
 def test_invalid_weight_method():
 
     with raises(NotImplementedError):
@@ -188,4 +208,5 @@ def test_CLI_too_few_args():
     with raises(SystemExit):
         CLI()
 
-test_CLI_output_matches_API()
+# test_CLI_output_matches_API()
+test_invalid_edge_range()

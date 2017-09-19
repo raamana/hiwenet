@@ -3,6 +3,7 @@ __all__ = ['extract', 'run_cli']
 import argparse
 import os
 import sys
+import collections
 import warnings
 import logging
 import networkx as nx
@@ -39,20 +40,24 @@ minimum_num_bins = 5
 
 default_weight_method = 'manhattan'
 default_num_bins = 25
+default_edge_range = None
 default_trim_percentile = 5
 default_trim_behaviour = True
 default_return_networkx_graph = False
 default_out_weights_path = None
 
-def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
+def __compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
 
-    if trim_outliers:
-        # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
-        edges_of_edges = np.array([np.percentile(features, trim_percentile),
-                                   np.percentile(features, 100 - trim_percentile)])
+    if edge_range is None:
+        if trim_outliers:
+            # percentiles_to_keep = [ trim_percentile, 1.0-trim_percentile] # [0.05, 0.95]
+            edges_of_edges = np.array([np.percentile(features, trim_percentile),
+                                       np.percentile(features, 100 - trim_percentile)])
+        else:
+            edges_of_edges = np.array([np.min(features), np.max(features)])
     else:
-        edges_of_edges = np.array([np.min(features), np.max(features)])
+        edges_of_edges = edge_range
 
     # Edges computed using data from all nodes, in order to establish correspondence
     edges = np.linspace(edges_of_edges[0], edges_of_edges[1], num=num_bins, endpoint=True)
@@ -63,6 +68,7 @@ def __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile):
 def extract(features, groups,
             weight_method=default_weight_method,
             num_bins=default_num_bins,
+            edge_range=default_edge_range,
             trim_outliers=default_trim_behaviour,
             trim_percentile=default_trim_percentile,
             return_networkx_graph=default_return_networkx_graph,
@@ -164,6 +170,20 @@ def extract(features, groups,
 
         This could also be optimized within an inner cross-validation loop if desired.
 
+    edge_range : tuple or None
+        The range of edges within which to bin the given values.
+        This can be helpful to ensure correspondence across multiple invocations of hiwenet (for different subjects),
+        in terms of range across all bins as well as individual bin edges.
+        Default is to automatically compute from the given values.
+
+        Accepted format:
+
+            - tuple of finite values: (range_min, range_max)
+            - None, triggering automatic calculation (default)
+
+        Notes : when controlling the ``edge_range``, it is not possible trim the tails (e.g. using the parameters
+        ``trim_outliers`` and ``trim_percentile``) for the current set of features using its own range.
+
     trim_outliers : bool, optional
         Whether to trim a small percentile of outliers at the edges of feature range,
         when features are expected to contain extreme outliers (like 0 or eps or Inf).
@@ -177,7 +197,8 @@ def extract(features, groups,
         Specifies the need for a networkx graph populated with weights computed. Default: False.
 
     out_weights_path : str, optional
-        Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.
+        Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format.
+        Default: nothing saved unless instructed.
 
     Returns
     -------
@@ -197,12 +218,12 @@ def extract(features, groups,
     """
 
     # parameter check
-    features, groups, num_bins, weight_method, group_ids, num_groups, num_links = __parameter_check(
-        features, groups, num_bins, weight_method, trim_outliers, trim_percentile)
+    features, groups, num_bins, edge_range, weight_method, group_ids, num_groups, num_links = __parameter_check(
+        features, groups, num_bins, edge_range, weight_method, trim_outliers, trim_percentile)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
-    edges = __compute_bin_edges(features, num_bins, trim_outliers, trim_percentile)
+    edges = __compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile)
 
     if return_networkx_graph:
         nx_graph = nx.Graph()
@@ -227,6 +248,9 @@ def extract(features, groups,
                     nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
                 else:
                     edge_weights[g1, g2] = edge_value
+            except (RuntimeError, RuntimeWarning) as runexc:
+                # placeholder to ignore some runtime errors (such as medpy's logger issue)
+                print(runexc)
             except BaseException as exc:
                 # numerical instabilities can cause trouble for histogram distance calculations
                 exceptions_list.append(str(exc))
@@ -346,7 +370,7 @@ def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, tri
     return
 
 
-def _type_cast_parameters(num_bins, features, groups):
+def _type_cast_parameters(num_bins, edge_range_spec, features, groups):
     """Casting inputs to required types."""
 
     if isinstance(num_bins, str):
@@ -359,16 +383,31 @@ def _type_cast_parameters(num_bins, features, groups):
     if np.isnan(num_bins) or np.isinf(num_bins):
         raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(minimum_num_bins))
 
+    if edge_range_spec is None:
+        edge_range = edge_range_spec
+    elif isinstance(edge_range_spec, collections.Sequence):
+        if len(edge_range_spec) != 2:
+            raise ValueError('edge_range must be a tuple of two values: (min, max)')
+        if edge_range_spec[0] >= edge_range_spec[1]:
+            raise ValueError('edge_range : min {} is not less than the max {} !'.format(edge_range_spec[0], edge_range_spec[1]))
+        if not np.all(np.isfinite(edge_range_spec)):
+            raise ValueError('Infinite or NaN values in edge range : {}'.format(edge_range_spec))
+
+        # converting it to tuple to make it immutable
+        edge_range = tuple(edge_range_spec)
+    else:
+        raise ValueError('Invalid edge range! Must be a tuple of two values (min, max)')
+
     if not isinstance(features, np.ndarray):
         features = np.array(features)
 
     if not isinstance(groups, np.ndarray):
         groups = np.array(groups)
 
-    return num_bins, features, groups
+    return num_bins, edge_range, features, groups
 
 
-def __parameter_check(features_spec, groups_spec, num_bins, weight_method, trim_outliers, trim_percentile):
+def __parameter_check(features_spec, groups_spec, num_bins, edge_range_spec, weight_method, trim_outliers, trim_percentile):
     """Necessary check on values, ranges, and types."""
 
     if isinstance(features_spec, str) and isinstance(groups_spec, str):
@@ -376,7 +415,7 @@ def __parameter_check(features_spec, groups_spec, num_bins, weight_method, trim_
     else:
         features, groups = features_spec, groups_spec
 
-    num_bins, features, groups = _type_cast_parameters(num_bins, features, groups)
+    num_bins, edge_range, features, groups = _type_cast_parameters(num_bins, edge_range_spec, features, groups)
     num_values = len(features)
 
     # memberships
@@ -388,13 +427,13 @@ def __parameter_check(features_spec, groups_spec, num_bins, weight_method, trim_
     if weight_method not in list_medpy_histogram_metrics:
         raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
 
-    return features, groups, num_bins, weight_method, group_ids, num_groups, num_links
+    return features, groups, num_bins, edge_range, weight_method, group_ids, num_groups, num_links
 
 
 def run_cli():
     "Command line interface to hiwenet."
 
-    features_path, groups_path, weight_method, num_bins, \
+    features_path, groups_path, weight_method, num_bins, edge_range, \
     trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = __parse_args()
 
     # TODO add the possibility to process multiple combinations of parameters: diff subjects, diff metrics
@@ -404,8 +443,8 @@ def run_cli():
 
     features, groups = __read_features_and_groups(features_path, groups_path)
 
-    extract(features, groups, weight_method, num_bins, trim_outliers, trim_percentile, return_networkx_graph,
-            out_weights_path)
+    extract(features, groups, weight_method, num_bins, edge_range, trim_outliers, trim_percentile,
+            return_networkx_graph, out_weights_path)
 
 
 def __read_features_and_groups(features_path, groups_path):
@@ -463,6 +502,14 @@ def __get_parser():
                         default=default_num_bins, required=False,
                         help="Number of bins used to construct the histogram. Default : {}".format(default_num_bins))
 
+    parser.add_argument("-r", "--edge_range", action="store", dest="edge_range",
+                        default=default_edge_range, required=False,
+                        nargs = 2,
+                        help="The range of edges (two finite values) within which to bin the given values e.g. --edge_range 1 6 "
+                             "This can be helpful to ensure correspondence across multiple invocations of hiwenet (for different subjects),"
+                             " in terms of range across all bins as well as individual bin edges. "
+                             "Default : {}, to automatically compute from the given values.".format(default_edge_range))
+
     parser.add_argument("-t", "--trim_outliers", action="store", dest="trim_outliers",
                         default=default_trim_behaviour, required=False,
                         help="Boolean flag indicating whether to trim the extreme/outlying values. Default True.")
@@ -472,7 +519,7 @@ def __get_parser():
                         help="Small value specifying the percentile of outliers to trim. "
                              "Default: {0}%% , must be in open interval (0, 100).".format(default_trim_percentile))
 
-    parser.add_argument("-r", "--return_networkx_graph", action="store", dest="return_networkx_graph",
+    parser.add_argument("-x", "--return_networkx_graph", action="store", dest="return_networkx_graph",
                         default=default_return_networkx_graph, required=False,
                         help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
 
@@ -504,7 +551,7 @@ def __parse_args():
     if not os.path.exists(groups_path):
         raise IOError("Given groups file doesn't exist.")
 
-    return in_features_path, groups_path, params.weight_method, params.num_bins, \
+    return in_features_path, groups_path, params.weight_method, params.num_bins, params.edge_range, \
            params.trim_outliers, params.trim_percentile, params.return_networkx_graph, params.out_weights_path
 
 
