@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import collections
+import traceback
 import warnings
 import logging
 import networkx as nx
@@ -253,6 +254,7 @@ def extract(features, groups,
                 print(runexc)
             except BaseException as exc:
                 # numerical instabilities can cause trouble for histogram distance calculations
+                traceback.print_exc()
                 exceptions_list.append(str(exc))
                 logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1],
                                                                                                      group_ids[g2]))
