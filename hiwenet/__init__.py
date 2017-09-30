@@ -14,3 +14,6 @@ else:
     raise NotImplementedError('hiwenet supports only 2.7.13 or 3+. Upgrade to Python 3+ is recommended.')
 
 __all__ = ['extract', 'hiwenet', 'run_cli']
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

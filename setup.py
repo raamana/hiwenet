@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+import versioneer
 
 setup(name='hiwenet',
-      version='0.3.1',
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description='Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience',
       long_description='Histogram-weighted Networks for Feature Extraction and Advance Analysis in Neuroscience; hiwenet',
       author='Pradeep Reddy Raamana',
