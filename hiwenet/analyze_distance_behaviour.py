@@ -92,40 +92,40 @@ out_dir = '/data1/strother_lab/praamana/dist_compare_hiwenet_lowerdim_finegrain'
 if not pexists(out_dir):
     os.mkdir(out_dir)
 
-# print('Computation ...')
-# for separability in range_separability:
-#     print('separability : {}'.format(separability))
-#
-#     center_two = center_one + separability
-#
-#     expt_id = 'separability{}_stdev{}_distances_dim_num_bins'.format(separability, default_stdev)
-#     saved_path = pjoin(out_dir,'{}.pkl'.format(expt_id))
-#     try:
-#         if pexists(saved_path):
-#             print('reading from disk')
-#             with open(saved_path, 'rb') as df:
-#                 distances = pickle.load(df)
-#         else:
-#             raise IOError(' no distaces saved ')
-#     except:
-#         print('recomputing.')
-#         distances = np.full([num_methods, num_dimensions, num_num_bins, num_trials ], np.nan)
-#
-#         for mm, method_str in enumerate(all_methods):
-#             method = getattr(histogram, method_str)
-#
-#             print('Analyzing {} ... dim : '.format(method_str))
-#             for dd, feat_dim in enumerate(range_dim):
-#                 print(' {} '.format(feat_dim), end='')
-#                 for nn, num_bins in enumerate(range_num_bins):
-#                     distances[mm, dd, nn, :] = Parallel(n_jobs=num_trials)(delayed(dist_betn_rand_hist)(method, center_one, center_two, feat_dim, num_bins) for tt in range(num_trials))
-#
-#             print(' .. Done.')
-#
-#         with open(saved_path, 'wb') as df:
-#             pickle.dump(distances, df)
-#
-#     print('computation for separability {} done.'.format(separability))
+print('Computation ...')
+for separability in range_separability:
+    print('separability : {}'.format(separability))
+
+    center_two = center_one + separability
+
+    expt_id = 'separability{}_stdev{}_distances_dim_num_bins'.format(separability, default_stdev)
+    saved_path = pjoin(out_dir,'{}.pkl'.format(expt_id))
+    try:
+        if pexists(saved_path):
+            print('reading from disk')
+            with open(saved_path, 'rb') as df:
+                distances = pickle.load(df)
+        else:
+            raise IOError(' no distaces saved ')
+    except:
+        print('recomputing.')
+        distances = np.full([num_methods, num_dimensions, num_num_bins, num_trials ], np.nan)
+
+        for mm, method_str in enumerate(all_methods):
+            method = getattr(histogram, method_str)
+
+            print('Analyzing {} ... dim : '.format(method_str))
+            for dd, feat_dim in enumerate(range_dim):
+                print(' {} '.format(feat_dim), end='')
+                for nn, num_bins in enumerate(range_num_bins):
+                    distances[mm, dd, nn, :] = Parallel(n_jobs=num_trials)(delayed(dist_betn_rand_hist)(method, center_one, center_two, feat_dim, num_bins) for tt in range(num_trials))
+
+            print(' .. Done.')
+
+        with open(saved_path, 'wb') as df:
+            pickle.dump(distances, df)
+
+    print('computation for separability {} done.'.format(separability))
 
 distances = np.full([num_sep, num_methods, num_dimensions, num_num_bins, num_trials ], np.nan)
 for ss, separability in enumerate(range_separability):

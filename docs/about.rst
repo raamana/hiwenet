@@ -30,7 +30,16 @@ What does hiwenet do?
 
 Thanks for checking out. Your feedback will be appreciated.
 
+Citation
+--------
+
+If you found this toolbox useful for your research, please cite one or more of these papers:
+
+ - Raamana, P. R., Histogram-weighted Networks for Feature Extraction, Connectivity and Advanced Analysis in Neuroscience. Zenodo. http://doi.org/10.5281/zenodo.839995
+ - Raamana, P. R., Weiner, M. W., Wang, L., Beg, M. F., & Alzheimer's Disease Neuroimaging Initiative. (2015). Thickness network features for prognostic applications in dementia. Neurobiology of aging, 36, S91-S102.
+
+
 Acknowledgements
 ----------------
 
-I would like to thank Oscar Esteban (@oesteban) for his volunteering of significant effort and time to review this package in great detail and offer constructive feedback, which has been very helpful in improving the software.
+I would like to thank Oscar Esteban (@oesteban) for his volunteer and attentive review of this package, which has been very helpful in improving the software.
