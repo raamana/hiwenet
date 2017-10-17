@@ -52,5 +52,3 @@ The target audience is users of almost all neuroimaging modalities who
 `hiwenet` package is built on the following packages: [@oliphant2007python; @walt2011numpy; @hagberg2008exploring; @oskar_maier_2017_886618]
 
 # References
-
- - Raamana, P.R. and Strother, S.C., 2017, *Impact of spatial scale and edge weight on predictive power of cortical thickness networks* bioRxiv 170381 http://www.biorxiv.org/content/early/2017/07/31/170381. doi: https://doi.org/10.1101/170381
