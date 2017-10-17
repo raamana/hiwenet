@@ -76,7 +76,7 @@ def extract(features, groups,
             out_weights_path=default_out_weights_path):
     """
     Extracts the histogram-distance weighted adjacency matrix.
-    
+
     Parameters
     ----------
     features : ndarray or str
@@ -228,7 +228,7 @@ def extract(features, groups,
 
     if return_networkx_graph:
         nx_graph = nx.Graph()
-        nx_graph.add_nodes_from(np.arange(num_groups))
+        nx_graph.add_nodes_from(group_ids)
     else:
         edge_weights = np.zeros([num_groups, num_groups], order='F')
 
@@ -246,7 +246,7 @@ def extract(features, groups,
             try:
                 edge_value = _compute_edge_weight(hist_one, hist_two, weight_method)
                 if return_networkx_graph:
-                    nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=edge_value)
+                    nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=float(edge_value))
                 else:
                     edge_weights[g1, g2] = edge_value
             except (RuntimeError, RuntimeWarning) as runexc:
@@ -256,8 +256,7 @@ def extract(features, groups,
                 # numerical instabilities can cause trouble for histogram distance calculations
                 traceback.print_exc()
                 exceptions_list.append(str(exc))
-                logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1],
-                                                                                                     group_ids[g2]))
+                logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1], group_ids[g2]))
 
     error_thresh = 0.05
     if len(exceptions_list) >= error_thresh * num_links:
@@ -301,7 +300,7 @@ def __preprocess_histogram(hist, values, edges):
 def _compute_edge_weight(hist_one, hist_two, weight_method_str):
     """
     Computes the edge weight between the two histograms.
-    
+
     Parameters
     ----------
     hist_one : sequence
@@ -311,7 +310,7 @@ def _compute_edge_weight(hist_one, hist_two, weight_method_str):
     weight_method_str : string
         Identifying the type of distance (or metric) to compute between the pair of histograms.
         Must be one of the metrics implemented in medpy.metric.histogram
-        
+
     Returns
     -------
     edge_value : float
@@ -329,13 +328,13 @@ def _compute_edge_weight(hist_one, hist_two, weight_method_str):
 def _identify_groups(groups):
     """
     To compute number of unique elements in a given membership specification.
-    
+
     Parameters
     ----------
     groups : numpy 1d array of length p, each value specifying which group that particular node belongs to.
-        For examlpe, if you have a cortical thickness values for 1000 vertices belonging to 100 patches, 
+        For examlpe, if you have a cortical thickness values for 1000 vertices belonging to 100 patches,
         this array could  have numbers 1 to 100 specifying which vertex belongs to which cortical patch.
-        Although grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity, 
+        Although grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity,
         this could also be a list of strings of length p.
 
     Returns
