@@ -47,8 +47,13 @@ default_trim_behaviour = True
 default_return_networkx_graph = False
 default_out_weights_path = None
 
-def compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile):
+def compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile, use_orig_distr=False):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
+
+    if use_orig_distr:
+        print('Using original distribution (without histogram) to compute edge weights!')
+        edges=None
+        return edges
 
     if edge_range is None:
         if trim_outliers:
@@ -72,6 +77,7 @@ def extract(features, groups,
             edge_range=default_edge_range,
             trim_outliers=default_trim_behaviour,
             trim_percentile=default_trim_percentile,
+            use_original_distribution=False,
             return_networkx_graph=default_return_networkx_graph,
             out_weights_path=default_out_weights_path):
     """
@@ -100,7 +106,10 @@ def extract(features, groups,
         It can either be a string identifying one of the weights implemented below, or a valid callable.
 
         If a callable, it must two accept two arrays as input and return one scalar as output.
-            Example: ``diff_medians = lambda x, y: abs(np.median(x)-np.median(y))``
+            Example: ``diff_in_skew = lambda x, y: abs(scipy.stats.skew(x)-scipy.stats.skew(y))``
+            NOTE: this method will be applied to histograms (not the original distribution of features from group/ROI).
+            In order to apply this callable directly on the original distribution (without trimming and histogram binning),
+            use ``use_original_distribution=True``.
         If a string, it must be one of the following methods:
 
         - 'chebyshev'
@@ -197,6 +206,16 @@ def extract(features, groups,
         Small value specifying the percentile of outliers to trim.
         Default: 5 (5%). Must be in open interval (0, 100).
 
+    use_original_distribution : bool, optional
+        When using a user-defined callable, this flag
+        1) allows skipping of pre-processing (trimming outliers) and histogram construction,
+        2) enables the application of arbitrary callable (user-defined) on the original distributions coming from the two groups/ROIs/nodes directly.
+
+        Example: ``diff_in_medians = lambda x, y: abs(np.median(x)-np.median(y))``
+
+        This option is valid only when weight_method is a valid callable,
+            which must take two inputs (possibly of different lengths) and return a single scalar.
+
     return_networkx_graph : bool, optional
         Specifies the need for a networkx graph populated with weights computed. Default: False.
 
@@ -225,11 +244,11 @@ def extract(features, groups,
     features, groups, num_bins, edge_range, group_ids, num_groups, num_links = check_params(
         features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
 
-    weight_func = check_weight_method(weight_method)
+    weight_func, use_orig_distr = check_weight_method(weight_method, use_original_distribution)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
-    edges = compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile)
+    edges = compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile, use_orig_distr)
 
     if return_networkx_graph:
         nx_graph = nx.Graph()
@@ -242,11 +261,11 @@ def extract(features, groups,
         if np.mod(g1 + 1, 5) == 0.0:
             sys.stdout.write('.')
         index1 = groups == group_ids[g1]
-        hist_one = compute_histogram(features[index1], edges)
+        hist_one = compute_histogram(features[index1], edges, use_orig_distr)
 
         for g2 in range(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
-            hist_two = compute_histogram(features[index2], edges)
+            hist_two = compute_histogram(features[index2], edges, use_orig_distr)
 
             try:
                 edge_value = compute_edge_weight(hist_one, hist_two, weight_func)
@@ -278,8 +297,11 @@ def extract(features, groups,
         return edge_weights
 
 
-def compute_histogram(values, edges):
+def compute_histogram(values, edges, use_orig_distr=False):
     """Computes histogram (density) for a given vector of values."""
+
+    if use_orig_distr:
+        return values
 
     hist, bin_edges = np.histogram(values, bins=edges, density=True)
     hist = preprocess_histogram(hist, values, edges)
@@ -427,8 +449,11 @@ def make_random_histogram(length=100, num_bins=10):
     return hist
 
 
-def check_weight_method(weight_method_spec):
+def check_weight_method(weight_method_spec, use_orig_distr=False):
     "Check if weight_method is recognized and implemented, or ensure it is callable."
+
+    if not isinstance(use_orig_distr, bool):
+        raise TypeError('use_original_distribution flag must be boolean!')
 
     if isinstance(weight_method_spec, str):
         if weight_method_spec in list_medpy_histogram_metrics:
@@ -436,6 +461,10 @@ def check_weight_method(weight_method_spec):
             weight_func = getattr(medpy_hist_metrics, weight_method_spec)
         else:
             raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
+
+        if use_orig_distr:
+            raise ValueError('use_original_distribution must be False when using builtin histogram metrics, '
+                             'which expect histograms as input.')
     elif callable(weight_method_spec):
         # ensure 1) takes two ndarrays
         try:
@@ -455,7 +484,7 @@ def check_weight_method(weight_method_spec):
                          '\n or a valid callable that accepts that two arrays '
                          'and returns 1 scalar.'.format(list_medpy_histogram_metrics))
 
-    return weight_func
+    return weight_func, use_orig_distr
 
 
 def check_params(features_spec, groups_spec, num_bins, edge_range_spec, trim_outliers, trim_percentile):
@@ -491,8 +520,9 @@ def run_cli():
 
     features, groups = read_features_and_groups(features_path, groups_path)
 
-    extract(features, groups, weight_method, num_bins, edge_range, trim_outliers, trim_percentile,
-            return_networkx_graph, out_weights_path)
+    extract(features, groups, weight_method=weight_method, num_bins=num_bins,
+            edge_range=edge_range, trim_outliers=trim_outliers, trim_percentile=trim_percentile,
+            return_networkx_graph=return_networkx_graph, out_weights_path=out_weights_path)
 
 
 def read_features_and_groups(features_path, groups_path):

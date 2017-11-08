@@ -2,6 +2,7 @@ import sys
 import os
 import shlex
 import numpy as np
+import scipy.stats
 import networkx as nx
 import matplotlib.pyplot as plt
 from os.path import join as pjoin, exists as pexists, abspath
@@ -217,12 +218,28 @@ def test_CLI_too_few_args():
 
 def test_input_callable():
 
-    diff_medians = lambda x, y: abs(np.median(x)-np.median(y))
-    ew = hiwenet(features, groups, weight_method=diff_medians)
+    diff_skew = lambda x, y: abs(scipy.stats.skew(x)-scipy.stats.skew(y))
+    ew = hiwenet(features, groups, weight_method=diff_skew)
 
     assert len(ew) == num_groups
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
 
 
-# test_CLI_output_matches_API()
-test_input_callable()
+def test_input_callable_on_orig_data():
+
+    diff_medians = lambda x, y: abs(np.median(x)-np.median(y))
+    ew = hiwenet(features, groups, weight_method=diff_medians,
+                 use_original_distribution=True)
+
+    assert len(ew) == num_groups
+    assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
+
+    # checking for invalid use : histogram metrics can not be applied on orig data (without building histograms)
+    with raises(ValueError):
+        ew = hiwenet(features, groups,
+                     weight_method='manhattan',
+                     use_original_distribution=True)
+
+
+test_CLI_output_matches_API()
+# test_input_callable()
