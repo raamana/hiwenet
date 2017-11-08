@@ -11,8 +11,10 @@ if version_info.major==2 and version_info.minor==7:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
 elif version_info.major > 2:
-    from hiwenet.hiwenet import extract as hiwenet
-    from hiwenet.hiwenet import run_cli as CLI
+    from hiwenet import extract as hiwenet
+    from hiwenet import run_cli as CLI
+    # from hiwenet.hiwenet import extract as hiwenet
+    # from hiwenet.hiwenet import run_cli as CLI
 else:
     raise NotImplementedError('hiwenet supports only 2.7.13 or 3+. Upgrate to Python 3+ is recommended.')
 
@@ -40,6 +42,10 @@ def make_features(dimensionality, num_groups):
 
 features, groups, group_ids, num_groups = make_features(dimensionality, num_groups)
 num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
+# for ix1, gid1 in enumerate(group_ids):
+#     for ix2, gid2 in enumerate(group_ids):
+#         if ix1 != ix2:
+#             dist = cdist(features[groups==gid1],features[groups==gid2], 'euclidean')
 
 cur_dir = os.path.dirname(abspath(__file__))
 

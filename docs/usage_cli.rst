@@ -5,7 +5,7 @@ Command line interface
 The command line interface for hiwenet (although I recommend using it via API) is shown below. Check the bottom of this page for examples.
 
 .. argparse::
-   :ref: hiwenet.__get_parser
+   :ref: hiwenet.get_parser
    :prog: hiwenet
    :nodefault:
    :nodefaultconst:

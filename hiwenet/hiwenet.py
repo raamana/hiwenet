@@ -47,7 +47,7 @@ default_trim_behaviour = True
 default_return_networkx_graph = False
 default_out_weights_path = None
 
-def __compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile):
+def compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
 
     if edge_range is None:
@@ -219,12 +219,12 @@ def extract(features, groups,
     """
 
     # parameter check
-    features, groups, num_bins, edge_range, weight_method, group_ids, num_groups, num_links = __parameter_check(
+    features, groups, num_bins, edge_range, weight_method, group_ids, num_groups, num_links = check_params(
         features, groups, num_bins, edge_range, weight_method, trim_outliers, trim_percentile)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
-    edges = __compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile)
+    edges = compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile)
 
     if return_networkx_graph:
         nx_graph = nx.Graph()
@@ -237,14 +237,14 @@ def extract(features, groups,
         if np.mod(g1 + 1, 5) == 0.0:
             sys.stdout.write('.')
         index1 = groups == group_ids[g1]
-        hist_one = __compute_histogram(features[index1], edges)
+        hist_one = compute_histogram(features[index1], edges)
 
         for g2 in range(g1 + 1, num_groups, 1):
             index2 = groups == group_ids[g2]
-            hist_two = __compute_histogram(features[index2], edges)
+            hist_two = compute_histogram(features[index2], edges)
 
             try:
-                edge_value = _compute_edge_weight(hist_one, hist_two, weight_method)
+                edge_value = compute_edge_weight(hist_one, hist_two, weight_method)
                 if return_networkx_graph:
                     nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=float(edge_value))
                 else:
@@ -273,16 +273,16 @@ def extract(features, groups,
         return edge_weights
 
 
-def __compute_histogram(values, edges):
+def compute_histogram(values, edges):
     """Computes histogram (density) for a given vector of values."""
 
     hist, bin_edges = np.histogram(values, bins=edges, density=True)
-    hist = __preprocess_histogram(hist, values, edges)
+    hist = preprocess_histogram(hist, values, edges)
 
     return hist
 
 
-def __preprocess_histogram(hist, values, edges):
+def preprocess_histogram(hist, values, edges):
     """Handles edge-cases and extremely-skewed histograms"""
 
     # working with extremely skewed histograms
@@ -297,7 +297,7 @@ def __preprocess_histogram(hist, values, edges):
     return hist
 
 
-def _compute_edge_weight(hist_one, hist_two, weight_method_str):
+def compute_edge_weight(hist_one, hist_two, weight_method_str):
     """
     Computes the edge weight between the two histograms.
 
@@ -325,7 +325,7 @@ def _compute_edge_weight(hist_one, hist_two, weight_method_str):
     return edge_value
 
 
-def _identify_groups(groups):
+def identify_groups(groups):
     """
     To compute number of unique elements in a given membership specification.
 
@@ -353,7 +353,7 @@ def _identify_groups(groups):
     return group_ids, num_groups
 
 
-def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, trim_percentile):
+def check_param_ranges(num_bins, num_groups, num_values, trim_outliers, trim_percentile):
     """Ensuring the parameters are in valid ranges."""
 
     if num_bins < minimum_num_bins:
@@ -371,7 +371,7 @@ def _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, tri
     return
 
 
-def _type_cast_parameters(num_bins, edge_range_spec, features, groups):
+def type_cast_params(num_bins, edge_range_spec, features, groups):
     """Casting inputs to required types."""
 
     if isinstance(num_bins, str):
@@ -408,22 +408,22 @@ def _type_cast_parameters(num_bins, edge_range_spec, features, groups):
     return num_bins, edge_range, features, groups
 
 
-def __parameter_check(features_spec, groups_spec, num_bins, edge_range_spec, weight_method, trim_outliers, trim_percentile):
+def check_params(features_spec, groups_spec, num_bins, edge_range_spec, weight_method, trim_outliers, trim_percentile):
     """Necessary check on values, ranges, and types."""
 
     if isinstance(features_spec, str) and isinstance(groups_spec, str):
-        features, groups = __read_features_and_groups(features_spec, groups_spec)
+        features, groups = read_features_and_groups(features_spec, groups_spec)
     else:
         features, groups = features_spec, groups_spec
 
-    num_bins, edge_range, features, groups = _type_cast_parameters(num_bins, edge_range_spec, features, groups)
+    num_bins, edge_range, features, groups = type_cast_params(num_bins, edge_range_spec, features, groups)
     num_values = len(features)
 
     # memberships
-    group_ids, num_groups = _identify_groups(groups)
+    group_ids, num_groups = identify_groups(groups)
     num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
 
-    _range_check_parameters(num_bins, num_groups, num_values, trim_outliers, trim_percentile)
+    check_param_ranges(num_bins, num_groups, num_values, trim_outliers, trim_percentile)
 
     if weight_method not in list_medpy_histogram_metrics:
         raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
@@ -435,20 +435,20 @@ def run_cli():
     "Command line interface to hiwenet."
 
     features_path, groups_path, weight_method, num_bins, edge_range, \
-    trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = __parse_args()
+    trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = parse_args()
 
     # TODO add the possibility to process multiple combinations of parameters: diff subjects, diff metrics
     # for features_path to be a file containing multiple subjects (one/line)
     # -w could take multiple values kldiv,histint,
     # each line: input_features_path,out_weights_path
 
-    features, groups = __read_features_and_groups(features_path, groups_path)
+    features, groups = read_features_and_groups(features_path, groups_path)
 
     extract(features, groups, weight_method, num_bins, edge_range, trim_outliers, trim_percentile,
             return_networkx_graph, out_weights_path)
 
 
-def __read_features_and_groups(features_path, groups_path):
+def read_features_and_groups(features_path, groups_path):
     "Reader for data and groups"
 
     try:
@@ -477,7 +477,7 @@ def __read_features_and_groups(features_path, groups_path):
     return features, groups
 
 
-def __get_parser():
+def get_parser():
     "Specifies the arguments and defaults, and returns the parser."
 
     parser = argparse.ArgumentParser(prog="hiwenet")
@@ -527,10 +527,10 @@ def __get_parser():
     return parser
 
 
-def __parse_args():
+def parse_args():
     """Parser/validator for the cmd line args."""
 
-    parser = __get_parser()
+    parser = get_parser()
 
     if len(sys.argv) < 2:
         parser.print_help()
