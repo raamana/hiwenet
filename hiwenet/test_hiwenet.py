@@ -36,7 +36,7 @@ def make_features(dimensionality, num_groups):
     group_ids = np.unique(groups)
     num_groups = len(group_ids)
 
-    features = 1000*np.random.random(dimensionality)
+    features = 10*np.random.random(dimensionality)
 
     return features, groups, group_ids, num_groups
 
@@ -214,5 +214,15 @@ def test_CLI_too_few_args():
     with raises(SystemExit):
         CLI()
 
+
+def test_input_callable():
+
+    diff_medians = lambda x, y: abs(np.median(x)-np.median(y))
+    ew = hiwenet(features, groups, weight_method=diff_medians)
+
+    assert len(ew) == num_groups
+    assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
+
+
 # test_CLI_output_matches_API()
-test_invalid_edge_range()
+test_input_callable()

@@ -95,10 +95,13 @@ def extract(features, groups,
         but this could also be a list of strings of length p, in which case a tuple is returned,
         identifying which weight belongs to which pair of patches.
 
-    weight_method : string, optional
+    weight_method : string or callable, optional
         Type of distance (or metric) to compute between the pair of histograms.
+        It can either be a string identifying one of the weights implemented below, or a valid callable.
 
-        It must be one of the following methods:
+        If a callable, it must two accept two arrays as input and return one scalar as output.
+            Example: ``diff_medians = lambda x, y: abs(np.median(x)-np.median(y))``
+        If a string, it must be one of the following methods:
 
         - 'chebyshev'
         - 'chebyshev_neg'
@@ -219,8 +222,10 @@ def extract(features, groups,
     """
 
     # parameter check
-    features, groups, num_bins, edge_range, weight_method, group_ids, num_groups, num_links = check_params(
-        features, groups, num_bins, edge_range, weight_method, trim_outliers, trim_percentile)
+    features, groups, num_bins, edge_range, group_ids, num_groups, num_links = check_params(
+        features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
+
+    weight_func = check_weight_method(weight_method)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
@@ -244,7 +249,7 @@ def extract(features, groups,
             hist_two = compute_histogram(features[index2], edges)
 
             try:
-                edge_value = compute_edge_weight(hist_one, hist_two, weight_method)
+                edge_value = compute_edge_weight(hist_one, hist_two, weight_func)
                 if return_networkx_graph:
                     nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=float(edge_value))
                 else:
@@ -297,7 +302,7 @@ def preprocess_histogram(hist, values, edges):
     return hist
 
 
-def compute_edge_weight(hist_one, hist_two, weight_method_str):
+def compute_edge_weight(hist_one, hist_two, weight_func):
     """
     Computes the edge weight between the two histograms.
 
@@ -305,11 +310,13 @@ def compute_edge_weight(hist_one, hist_two, weight_method_str):
     ----------
     hist_one : sequence
         First histogram
+
     hist_two : sequence
         Second histogram
-    weight_method_str : string
+
+    weight_func : callable
         Identifying the type of distance (or metric) to compute between the pair of histograms.
-        Must be one of the metrics implemented in medpy.metric.histogram
+        Must be one of the metrics implemented in medpy.metric.histogram, or another valid callable.
 
     Returns
     -------
@@ -317,10 +324,7 @@ def compute_edge_weight(hist_one, hist_two, weight_method_str):
         Distance or metric between the two histograms
     """
 
-    from medpy.metric import histogram as medpy_hist_metrics
-
-    weight_method = getattr(medpy_hist_metrics, weight_method_str)
-    edge_value = weight_method(hist_one, hist_two)
+    edge_value = weight_func(hist_one, hist_two)
 
     return edge_value
 
@@ -408,7 +412,53 @@ def type_cast_params(num_bins, edge_range_spec, features, groups):
     return num_bins, edge_range, features, groups
 
 
-def check_params(features_spec, groups_spec, num_bins, edge_range_spec, weight_method, trim_outliers, trim_percentile):
+def make_random_histogram(length=100, num_bins=10):
+    "Returns a sequence of histogram density values that sum to 1.0"
+
+    hist, bin_edges = np.histogram(np.random.random(length),
+                                   bins=num_bins, density=True)
+
+    # to ensure they sum to 1.0
+    hist = hist / sum(hist)
+
+    if len(hist) < 2:
+        raise ValueError('Invalid histogram')
+
+    return hist
+
+
+def check_weight_method(weight_method_spec):
+    "Check if weight_method is recognized and implemented, or ensure it is callable."
+
+    if isinstance(weight_method_spec, str):
+        if weight_method_spec in list_medpy_histogram_metrics:
+            from medpy.metric import histogram as medpy_hist_metrics
+            weight_func = getattr(medpy_hist_metrics, weight_method_spec)
+        else:
+            raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
+    elif callable(weight_method_spec):
+        # ensure 1) takes two ndarrays
+        try:
+            dummy_weight = weight_method_spec(make_random_histogram(), make_random_histogram())
+        except:
+            raise TypeError('Error applying given callable on two input arrays.\n'
+                            '{} must accept two arrays and return a single scalar value!')
+        else:
+            # and 2) returns only one number
+            if not np.isscalar(dummy_weight):
+                raise TypeError('Given callable does not return a single scalar as output.')
+
+        weight_func = weight_method_spec
+    else:
+        raise ValueError('Supplied method to compute edge weight is not recognized:\n'
+                         'must be a string identifying one of the implemented methods\n{}'
+                         '\n or a valid callable that accepts that two arrays '
+                         'and returns 1 scalar.'.format(list_medpy_histogram_metrics))
+
+    return weight_func
+
+
+def check_params(features_spec, groups_spec, num_bins, edge_range_spec, trim_outliers, trim_percentile):
     """Necessary check on values, ranges, and types."""
 
     if isinstance(features_spec, str) and isinstance(groups_spec, str):
@@ -425,10 +475,7 @@ def check_params(features_spec, groups_spec, num_bins, edge_range_spec, weight_m
 
     check_param_ranges(num_bins, num_groups, num_values, trim_outliers, trim_percentile)
 
-    if weight_method not in list_medpy_histogram_metrics:
-        raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
-
-    return features, groups, num_bins, edge_range, weight_method, group_ids, num_groups, num_links
+    return features, groups, num_bins, edge_range, group_ids, num_groups, num_links
 
 
 def run_cli():
