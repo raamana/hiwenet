@@ -52,6 +52,21 @@ cur_dir = os.path.dirname(abspath(__file__))
 
 # the following are mostly usage tests. Refer to test_medpy.py for scientific validity of histogram metrics
 
+def test_directed_mat():
+    ew = hiwenet(features, groups, asymmetric=True)
+    assert len(ew) == num_groups
+    assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
+
+    # ensure no self-loops
+    diag_elements = ew.flatten()[::num_groups+1]
+    assert np.allclose(diag_elements, np.nan, equal_nan=True)
+
+def test_directed_nx():
+    graph = hiwenet(features, groups, asymmetric=True, return_networkx_graph=True)
+    assert graph.is_directed()
+    assert graph.number_of_nodes() == num_groups
+    assert graph.number_of_edges() == 2*num_links
+
 def test_dimensions():
     ew = hiwenet(features, groups)
     assert len(ew) == num_groups
@@ -166,7 +181,7 @@ def test_CLI_output_matches_API():
     CLI()
     cli_result = np.genfromtxt(result_path, delimiter=',')
 
-    if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3)):
+    if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3, equal_nan=True)):
         raise ValueError('CLI results differ from API.')
 
 
@@ -240,6 +255,7 @@ def test_input_callable_on_orig_data():
                      weight_method='manhattan',
                      use_original_distribution=True)
 
-
-test_CLI_output_matches_API()
+# test_directed_nx()
+test_directed_mat()
+# test_CLI_output_matches_API()
 # test_input_callable()

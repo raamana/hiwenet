@@ -37,6 +37,8 @@ semi_metric_list = [
     'noelle_1', 'noelle_3',
     'correlate_1']
 
+metrics_on_original_features = ['diff_medians', ]
+
 minimum_num_bins = 5
 
 default_weight_method = 'manhattan'
@@ -78,6 +80,7 @@ def extract(features, groups,
             trim_outliers=default_trim_behaviour,
             trim_percentile=default_trim_percentile,
             use_original_distribution=False,
+            asymmetric=False,
             return_networkx_graph=default_return_networkx_graph,
             out_weights_path=default_out_weights_path):
     """
@@ -104,12 +107,6 @@ def extract(features, groups,
     weight_method : string or callable, optional
         Type of distance (or metric) to compute between the pair of histograms.
         It can either be a string identifying one of the weights implemented below, or a valid callable.
-
-        If a callable, it must two accept two arrays as input and return one scalar as output.
-            Example: ``diff_in_skew = lambda x, y: abs(scipy.stats.skew(x)-scipy.stats.skew(y))``
-            NOTE: this method will be applied to histograms (not the original distribution of features from group/ROI).
-            In order to apply this callable directly on the original distribution (without trimming and histogram binning),
-            use ``use_original_distribution=True``.
 
         If a string, it must be one of the following methods:
 
@@ -173,6 +170,22 @@ def extract(features, groups,
 
         *Default* choice: 'minowski'.
 
+        The method can also be one of the following identifying metrics that operate on the original data directly -
+         e.g. difference in the medians coming from the distributions of the pair of ROIs.
+
+         - 'diff_medians'
+         - 'diff_means'
+
+         Please note this can lead to adjacency matrices that may not be symmetric
+            e.g. difference metric on two scalars is not symmetric).
+            In this case, be sure to use the flag: allow_non_symmetric=True
+
+        If weight_method is a callable, it must two accept two arrays as input and return one scalar as output.
+            Example: ``diff_in_skew = lambda x, y: abs(scipy.stats.skew(x)-scipy.stats.skew(y))``
+            NOTE: this method will be applied to histograms (not the original distribution of features from group/ROI).
+            In order to apply this callable directly on the original distribution (without trimming and histogram binning),
+            use ``use_original_distribution=True``.
+
     num_bins : scalar, optional
         Number of bins to use when computing histogram within each patch/group.
 
@@ -217,6 +230,11 @@ def extract(features, groups,
         This option is valid only when weight_method is a valid callable,
             which must take two inputs (possibly of different lengths) and return a single scalar.
 
+    asymmetric : bool
+        Flag to identify resulting adjacency matrix is expected to be non-symmetric.
+        Note: this results in twice the computation time!
+        Default: False , for histogram metrics implemented here are symmetric.
+
     return_networkx_graph : bool, optional
         Specifies the need for a networkx graph populated with weights computed. Default: False.
 
@@ -245,35 +263,47 @@ def extract(features, groups,
     features, groups, num_bins, edge_range, group_ids, num_groups, num_links = check_params(
         features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
 
-    weight_func, use_orig_distr = check_weight_method(weight_method, use_original_distribution)
+    weight_func, use_orig_distr, non_symmetric = check_weight_method(weight_method, use_original_distribution, asymmetric)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
     edges = compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile, use_orig_distr)
 
     if return_networkx_graph:
-        nx_graph = nx.Graph()
-        nx_graph.add_nodes_from(group_ids)
+        graph = nx.DiGraph() if non_symmetric else nx.Graph()
+        graph.add_nodes_from(group_ids)
     else:
         edge_weights = np.full([num_groups, num_groups], np.nan)
 
     exceptions_list = list()
-    for g1 in range(num_groups):
-        if np.mod(g1 + 1, 5) == 0.0:
+    for src in range(num_groups):
+        # primitive progress indicator
+        if np.mod(src + 1, 5) == 0.0:
             sys.stdout.write('.')
-        index1 = groups == group_ids[g1]
+
+        index1 = groups == group_ids[src]
         hist_one = compute_histogram(features[index1], edges, use_orig_distr)
 
-        for g2 in range(g1 + 1, num_groups, 1):
-            index2 = groups == group_ids[g2]
+        if non_symmetric:
+            target_list = range(num_groups)
+        else:
+            # when symmetric, only upper tri matrix is computed/filled
+            target_list = range(src + 1, num_groups, 1)
+
+        for dest in target_list:
+            # skipping edge between self
+            if src == dest:
+                continue
+
+            index2 = groups == group_ids[dest]
             hist_two = compute_histogram(features[index2], edges, use_orig_distr)
 
             try:
                 edge_value = compute_edge_weight(hist_one, hist_two, weight_func)
                 if return_networkx_graph:
-                    nx_graph.add_edge(group_ids[g1], group_ids[g2], weight=float(edge_value))
+                    graph.add_edge(group_ids[src], group_ids[dest], weight=float(edge_value))
                 else:
-                    edge_weights[g1, g2] = edge_value
+                    edge_weights[src, dest] = edge_value
             except (RuntimeError, RuntimeWarning) as runexc:
                 # placeholder to ignore some runtime errors (such as medpy's logger issue)
                 print(runexc)
@@ -281,7 +311,7 @@ def extract(features, groups,
                 # numerical instabilities can cause trouble for histogram distance calculations
                 traceback.print_exc()
                 exceptions_list.append(str(exc))
-                logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[g1], group_ids[g2]))
+                logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[src], group_ids[dest]))
 
     error_thresh = 0.05
     if len(exceptions_list) >= error_thresh * num_links:
@@ -290,8 +320,8 @@ def extract(features, groups,
 
     if return_networkx_graph:
         if out_weights_path is not None:
-            nx_graph.write_graphml(out_weights_path)
-        return nx_graph
+            graph.write_graphml(out_weights_path)
+        return graph
     else:
         if out_weights_path is not None:
             np.savetxt(out_weights_path, edge_weights, delimiter=',', fmt='%.9f')
@@ -450,11 +480,16 @@ def make_random_histogram(length=100, num_bins=10):
     return hist
 
 
-def check_weight_method(weight_method_spec, use_orig_distr=False):
+def check_weight_method(weight_method_spec,
+                        use_orig_distr=False,
+                        allow_non_symmetric=False):
     "Check if weight_method is recognized and implemented, or ensure it is callable."
 
     if not isinstance(use_orig_distr, bool):
         raise TypeError('use_original_distribution flag must be boolean!')
+
+    if not isinstance(allow_non_symmetric, bool):
+        raise TypeError('allow_non_symmetric flag must be boolean')
 
     if isinstance(weight_method_spec, str):
         if weight_method_spec in list_medpy_histogram_metrics:
@@ -466,6 +501,7 @@ def check_weight_method(weight_method_spec, use_orig_distr=False):
         if use_orig_distr:
             raise ValueError('use_original_distribution must be False when using builtin histogram metrics, '
                              'which expect histograms as input.')
+
     elif callable(weight_method_spec):
         # ensure 1) takes two ndarrays
         try:
@@ -485,7 +521,7 @@ def check_weight_method(weight_method_spec, use_orig_distr=False):
                          '\n or a valid callable that accepts that two arrays '
                          'and returns 1 scalar.'.format(list_medpy_histogram_metrics))
 
-    return weight_func, use_orig_distr
+    return weight_func, use_orig_distr, allow_non_symmetric
 
 
 def check_params(features_spec, groups_spec, num_bins, edge_range_spec, trim_outliers, trim_percentile):
