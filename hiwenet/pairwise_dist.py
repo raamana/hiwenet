@@ -45,7 +45,10 @@ semi_metric_list = [
     'noelle_1', 'noelle_3',
     'correlate_1']
 
-metrics_on_original_features = ['diff_medians', 'diff_medians_abs']
+metrics_on_original_features = ['diff_medians', 'diff_medians_abs',
+                                'diff_means',   'diff_means_abs' ]
+
+symmetric_metrics_on_original_features = ['diff_medians_abs', 'diff_means_abs']
 
 minimum_num_bins = 5
 
@@ -516,6 +519,11 @@ def check_weight_method(weight_method_spec,
             if not use_orig_distr:
                 raise ValueError('use_original_distribution must be True when using builtin non-histogram metrics, '
                                  'which expect original feature values in ROI/node as input.')
+
+            if weight_method_spec in symmetric_metrics_on_original_features:
+                print('Chosen metric is symmetric. Ignoring asymmetric=False flag.')
+                allow_non_symmetric=False
+
         else:
             raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
 
