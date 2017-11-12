@@ -110,6 +110,7 @@ def extract(features, groups,
             NOTE: this method will be applied to histograms (not the original distribution of features from group/ROI).
             In order to apply this callable directly on the original distribution (without trimming and histogram binning),
             use ``use_original_distribution=True``.
+
         If a string, it must be one of the following methods:
 
         - 'chebyshev'
@@ -254,7 +255,7 @@ def extract(features, groups,
         nx_graph = nx.Graph()
         nx_graph.add_nodes_from(group_ids)
     else:
-        edge_weights = np.zeros([num_groups, num_groups], order='F')
+        edge_weights = np.full([num_groups, num_groups], np.nan)
 
     exceptions_list = list()
     for g1 in range(num_groups):
