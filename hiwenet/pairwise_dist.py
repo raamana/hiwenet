@@ -10,6 +10,14 @@ import logging
 import networkx as nx
 import numpy as np
 from os.path import join as pjoin, exists as pexists
+from sys import version_info
+
+if version_info.major==2 and version_info.minor==7:
+    import more_metrics
+elif version_info.major > 2:
+    from hiwenet import more_metrics
+else:
+    raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
@@ -37,7 +45,7 @@ semi_metric_list = [
     'noelle_1', 'noelle_3',
     'correlate_1']
 
-metrics_on_original_features = ['diff_medians', ]
+metrics_on_original_features = ['diff_medians', 'diff_medians_abs']
 
 minimum_num_bins = 5
 
@@ -318,6 +326,8 @@ def extract(features, groups,
         print('All exceptions encountered so far:\n {}'.format('\n'.join(exceptions_list)))
         raise ValueError('Weights for atleast {:.2f}% of edges could not be computed.'.format(error_thresh * 100))
 
+    sys.stdout.write('\n')
+
     if return_networkx_graph:
         if out_weights_path is not None:
             graph.write_graphml(out_weights_path)
@@ -492,15 +502,22 @@ def check_weight_method(weight_method_spec,
         raise TypeError('allow_non_symmetric flag must be boolean')
 
     if isinstance(weight_method_spec, str):
+        weight_method_spec = weight_method_spec.lower()
+
         if weight_method_spec in list_medpy_histogram_metrics:
             from medpy.metric import histogram as medpy_hist_metrics
             weight_func = getattr(medpy_hist_metrics, weight_method_spec)
+            if use_orig_distr:
+                raise ValueError('use_original_distribution must be False when using builtin histogram metrics, '
+                                 'which expect histograms as input.')
+
+        elif weight_method_spec in metrics_on_original_features:
+            weight_func = getattr(more_metrics, weight_method_spec)
+            if not use_orig_distr:
+                raise ValueError('use_original_distribution must be True when using builtin non-histogram metrics, '
+                                 'which expect original feature values in ROI/node as input.')
         else:
             raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
-
-        if use_orig_distr:
-            raise ValueError('use_original_distribution must be False when using builtin histogram metrics, '
-                             'which expect histograms as input.')
 
     elif callable(weight_method_spec):
         # ensure 1) takes two ndarrays

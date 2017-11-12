@@ -9,8 +9,8 @@ from os.path import join as pjoin, exists as pexists, abspath
 from sys import version_info
 
 if version_info.major==2 and version_info.minor==7:
-    from hiwenet import extract as hiwenet
-    from hiwenet import run_cli as CLI
+    from pairwise_dist import extract as hiwenet
+    from pairwise_dist import run_cli as CLI
 elif version_info.major > 2:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
@@ -71,6 +71,25 @@ def test_dimensions():
     ew = hiwenet(features, groups)
     assert len(ew) == num_groups
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
+
+def test_more_metrics():
+    ew = hiwenet(features, groups, weight_method='diff_medians',
+                 use_original_distribution=True)
+    assert len(ew) == num_groups
+    assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
+
+    ew_abs = hiwenet(features, groups, weight_method='diff_medians_abs',
+                     use_original_distribution=True)
+    assert np.allclose(np.abs(ew), ew_abs, equal_nan=True)
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups, weight_method='diff_medians',
+                     use_original_distribution=False)
+
+    with raises(ValueError):
+        ew = hiwenet(features, groups,
+                     weight_method='manhattan',
+                     use_original_distribution=True)
 
 def test_too_few_groups():
     features, groups, group_ids, num_groups = make_features(100, 1)
@@ -256,6 +275,8 @@ def test_input_callable_on_orig_data():
                      use_original_distribution=True)
 
 # test_directed_nx()
-test_directed_mat()
+# test_directed_mat()
 # test_CLI_output_matches_API()
 # test_input_callable()
+
+test_more_metrics()
