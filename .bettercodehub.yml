@@ -1,0 +1,7 @@
+exclude:
+- /docs/.*
+- /examples/simple_visualization_examples.py
+- /hiwenet/_version.py
+component_depth: 1
+languages:
+- python
