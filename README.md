@@ -7,7 +7,7 @@
 [![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
 [![Python versions](https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6-blue.svg)]
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.839995.svg)](https://doi.org/10.5281/zenodo.839995)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1064012.svg)](https://doi.org/10.5281/zenodo.1064012)
 
 Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience
 
