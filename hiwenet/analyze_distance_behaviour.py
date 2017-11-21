@@ -22,7 +22,11 @@ semi_metric_list = ['jensen_shannon', 'chi_square', 'chebyshev', 'chebyshev_neg'
                     'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation',
                     'noelle_1', 'noelle_3', 'correlate_1']
 excluded = ['kullback_leibler', ]
-all_methods = metric_list + similarity_funcs + semi_metric_list
+
+# all_methods = metric_list + similarity_funcs + semi_metric_list
+# sticking to fewer methods with
+all_methods = np.array(['chebyshev', 'chi_square', 'correlate', 'cosine', 'euclidean',
+                           'histogram_intersection', 'jensen_shannon', 'manhattan', 'minowski',  'relative_deviation'])
 all_methods.sort()
 
 default_feature_dim = 1000
@@ -91,6 +95,10 @@ print('range of dimensions : {}'.format(range_dim))
 out_dir = '/data1/strother_lab/praamana/dist_compare_hiwenet_lowerdim_finegrain'
 if not pexists(out_dir):
     os.mkdir(out_dir)
+
+out_dir_analysis = '/data1/strother_lab/praamana/dist_compare_hiwenet_lowerdim_finegrain/analysis'
+if not pexists(out_dir_analysis):
+    os.mkdir(out_dir_analysis)
 
 print('Computation ...')
 for separability in range_separability:
@@ -180,7 +188,7 @@ for ss, separability in enumerate(range_separability):
 
     plt.xlabel('num bins')
     plt.suptitle('separability : {}'.format(separability))
-    out_fig_path = pjoin(out_dir, 'fig_{}.pdf'.format(expt_id))
+    out_fig_path = pjoin(out_dir_analysis, 'fig_{}.pdf'.format(expt_id))
     fig.savefig(out_fig_path, dpi=300)
     plt.close()
     # plt.show(block=False)
@@ -203,6 +211,6 @@ for mm, method_str in enumerate(all_methods):
         plt.title('sep = {}'.format(separability))
 
     plt.suptitle('method : {}'.format(method_str))
-    out_fig_path = pjoin(out_dir, 'method_{}_diff_seprabilities.pdf'.format(method_str))
+    out_fig_path = pjoin(out_dir_analysis, 'method_{}_diff_seprabilities.pdf'.format(method_str))
     fig.savefig(out_fig_path, dpi=300)
     plt.close()
