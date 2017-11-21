@@ -11,6 +11,7 @@ from sys import version_info
 if version_info.major==2 and version_info.minor==7:
     from pairwise_dist import extract as hiwenet
     from pairwise_dist import run_cli as CLI
+    from pairwise_dist import metric_list, semi_metric_list
 elif version_info.major > 2:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
