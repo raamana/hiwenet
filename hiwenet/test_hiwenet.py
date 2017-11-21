@@ -14,12 +14,13 @@ if version_info.major==2 and version_info.minor==7:
 elif version_info.major > 2:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
+    from hiwenet.pairwise_dist import metric_list, semi_metric_list
     # from hiwenet.hiwenet import extract as hiwenet
     # from hiwenet.hiwenet import run_cli as CLI
 else:
     raise NotImplementedError('hiwenet supports only 2.7.13 or 3+. Upgrate to Python 3+ is recommended.')
 
-
+list_weight_methods = metric_list + semi_metric_list
 sys.dont_write_bytecode = True
 
 from pytest import raises, warns, set_trace
@@ -189,19 +190,22 @@ def test_CLI_output_matches_API():
 
     # turning groups into strings to correspond with CLI
     groups_str = np.array([str(grp) for grp in groups])
-    api_result = hiwenet(features, groups_str, weight_method='cosine')
+
     featrs_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_features.txt'))
     groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_groups.txt'))
     result_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_result.txt'))
     np.savetxt(featrs_path, features, fmt='%20.9f')
     np.savetxt(groups_path, groups,  fmt='%d')
 
-    sys.argv = shlex.split('hiwenet -f {} -g {} -o {} -w cosine'.format(featrs_path, groups_path, result_path))
-    CLI()
-    cli_result = np.genfromtxt(result_path, delimiter=',')
+    for weight_method in list_weight_methods:
+        api_result = hiwenet(features, groups_str, weight_method=weight_method)
 
-    if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3, equal_nan=True)):
-        raise ValueError('CLI results differ from API.')
+        sys.argv = shlex.split('hiwenet -f {} -g {} -o {} -w {}'.format(featrs_path, groups_path, result_path, weight_method))
+        CLI()
+        cli_result = np.genfromtxt(result_path, delimiter=',')
+
+        if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3, equal_nan=True)):
+            raise ValueError('CLI results differ from API for {}'.format(weight_method))
 
 
 def test_CLI_nonexisting_paths():
@@ -276,7 +280,7 @@ def test_input_callable_on_orig_data():
 
 # test_directed_nx()
 # test_directed_mat()
-# test_CLI_output_matches_API()
+test_CLI_output_matches_API()
 # test_input_callable()
 
-test_more_metrics()
+# test_more_metrics()
