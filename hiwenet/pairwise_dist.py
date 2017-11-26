@@ -298,7 +298,43 @@ def extract(features, groups,
         result = non_pairwise.relative_to_all(features, groups, edges, weight_func,
                                               use_orig_distr, group_ids, num_groups,
                                               return_networkx_graph, out_weights_path)
+    else:
+        result = pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
+                                  group_ids, num_groups, num_links,
+                                  non_symmetric, return_networkx_graph, out_weights_path)
 
+    # this can be a networkx graph or numpy array depending on request
+    return result
+
+
+def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
+                     group_ids, num_groups, num_links,
+                     non_symmetric, return_networkx_graph, out_weights_path):
+    """
+    Core function to compute the pair-wise histogram distance between all ROIs.
+
+    Parameters
+    ----------
+    features
+    groups
+    edges
+    weight_func
+    use_orig_distr
+    group_ids
+    num_groups
+    num_links
+    non_symmetric
+    return_networkx_graph
+    out_weights_path
+
+    Returns
+    -------
+    result : object
+        A networkx graph or numpy array depending on request
+
+    """
+
+    # the following will execute only when the pair-wise computation is requested.
     if return_networkx_graph:
         graph = nx.DiGraph() if non_symmetric else nx.Graph()
         graph.add_nodes_from(group_ids)
