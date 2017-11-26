@@ -9,15 +9,13 @@ from os.path import join as pjoin, exists as pexists, abspath
 from sys import version_info
 
 if version_info.major==2 and version_info.minor==7:
-    from pairwise_dist import extract as hiwenet
-    from pairwise_dist import run_cli as CLI
-    from pairwise_dist import metric_list, semi_metric_list
+    from .pairwise_dist import extract as hiwenet
+    from .pairwise_dist import run_cli as CLI
+    from .pairwise_dist import metric_list, semi_metric_list
 elif version_info.major > 2:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
     from hiwenet.pairwise_dist import metric_list, semi_metric_list
-    # from hiwenet.hiwenet import extract as hiwenet
-    # from hiwenet.hiwenet import run_cli as CLI
 else:
     raise NotImplementedError('hiwenet supports only 2.7.13 or 3+. Upgrate to Python 3+ is recommended.')
 
@@ -279,9 +277,38 @@ def test_input_callable_on_orig_data():
                      weight_method='manhattan',
                      use_original_distribution=True)
 
+def test_relative_to_all():
+    ""
+
+    for weight_method in list_weight_methods:
+        ew = hiwenet(features, groups,
+                     weight_method=weight_method,
+                     relative_to_all=True)
+
+        # it must be a vector
+        assert ew.size == num_groups
+        assert ew.shape[0] == num_groups
+        assert ew.shape[1] == 1
+
+        nxg = hiwenet(features, groups,
+                      weight_method=weight_method,
+                      relative_to_all=True,
+                      return_networkx_graph=True)
+
+        # additional node is the grand node (from all roi's)
+        assert nxg.number_of_nodes() == num_groups+1
+        assert nxg.number_of_edges() == num_groups
+
+        weights_from_nxg = np.array([ nxg[src]['whole']['weight'] for src in group_ids ])
+        assert np.allclose(ew.flatten(), weights_from_nxg)
+
+
+
 # test_directed_nx()
 # test_directed_mat()
-test_CLI_output_matches_API()
+# test_CLI_output_matches_API()
 # test_input_callable()
 
 # test_more_metrics()
+
+test_relative_to_all()
