@@ -190,6 +190,8 @@ def extract(features, groups,
 
          - 'diff_medians'
          - 'diff_means'
+         - 'diff_medians_abs'
+         - 'diff_means_abs'
 
          Please note this can lead to adjacency matrices that may not be symmetric
             e.g. difference metric on two scalars is not symmetric).
@@ -281,13 +283,16 @@ def extract(features, groups,
 
     # parameter check
     features, groups, num_bins, edge_range, group_ids, num_groups, num_links = check_params(
-        features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
+            features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
 
-    weight_func, use_orig_distr, non_symmetric = check_weight_method(weight_method, use_original_distribution, asymmetric)
+    weight_func, use_orig_distr, non_symmetric = check_weight_method(weight_method,
+                                                                     use_original_distribution, asymmetric)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
-    edges = compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile, use_orig_distr)
+    edges = compute_bin_edges(features, num_bins, edge_range,
+                              trim_outliers, trim_percentile, use_orig_distr)
+
     # handling special
     if relative_to_all:
         result = non_pairwise.relative_to_all(features, groups, edges, weight_func,
@@ -324,7 +329,7 @@ def extract(features, groups,
             hist_two = compute_histogram(features[index2], edges, use_orig_distr)
 
             try:
-                edge_value = compute_edge_weight(hist_one, hist_two, weight_func)
+                edge_value = weight_func(hist_one, hist_two)
                 if return_networkx_graph:
                     graph.add_edge(group_ids[src], group_ids[dest], weight=float(edge_value))
                 else:
@@ -336,7 +341,8 @@ def extract(features, groups,
                 # numerical instabilities can cause trouble for histogram distance calculations
                 traceback.print_exc()
                 exceptions_list.append(str(exc))
-                logging.warning('Unable to compute edge weight between {} and {}. Skipping it.'.format(group_ids[src], group_ids[dest]))
+                logging.warning('Unable to compute edge weight between '
+                                ' {} and {}. Skipping it.'.format(group_ids[src], group_ids[dest]))
 
     error_thresh = 0.05
     if len(exceptions_list) >= error_thresh * num_links:
