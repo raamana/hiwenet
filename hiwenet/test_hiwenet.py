@@ -24,8 +24,8 @@ sys.dont_write_bytecode = True
 
 from pytest import raises, warns, set_trace
 
-dimensionality = 1000
-num_groups = 5
+dimensionality = np.random.randint(500, 2500)
+num_groups = np.random.randint(2, 100)
 
 def make_features(dimensionality, num_groups):
     num_links = int(num_groups*(num_groups-1)/2.0)
