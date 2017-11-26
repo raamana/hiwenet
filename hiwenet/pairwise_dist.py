@@ -14,8 +14,11 @@ from sys import version_info
 
 if version_info.major==2 and version_info.minor==7:
     import more_metrics
+    import non_pairwise
+    from .utils import compute_histogram
 elif version_info.major > 2:
-    from hiwenet import more_metrics
+    from hiwenet import more_metrics, non_pairwise
+    from hiwenet.utils import compute_histogram
 else:
     raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
 
@@ -91,6 +94,7 @@ def extract(features, groups,
             trim_outliers=default_trim_behaviour,
             trim_percentile=default_trim_percentile,
             use_original_distribution=False,
+            relative_to_all=False,
             asymmetric=False,
             return_networkx_graph=default_return_networkx_graph,
             out_weights_path=default_out_weights_path):
@@ -241,6 +245,11 @@ def extract(features, groups,
         This option is valid only when weight_method is a valid callable,
             which must take two inputs (possibly of different lengths) and return a single scalar.
 
+    relative_to_all : bool
+        Flag to instruct the computation of a grand histogram (distribution pooled from values in all ROIs),
+        and compute distances (based on distance specified by ``weight_method``) by from each ROI to the grand mean.
+        This would result in only N distances for N ROIs, instead of the usual N*(N-1) pair-wise distances.
+
     asymmetric : bool
         Flag to identify resulting adjacency matrix is expected to be non-symmetric.
         Note: this results in twice the computation time!
@@ -279,6 +288,11 @@ def extract(features, groups,
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
     edges = compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile, use_orig_distr)
+    # handling special
+    if relative_to_all:
+        result = non_pairwise.relative_to_all(features, groups, edges, weight_func,
+                                              use_orig_distr, group_ids, num_groups,
+                                              return_networkx_graph, out_weights_path)
 
     if return_networkx_graph:
         graph = nx.DiGraph() if non_symmetric else nx.Graph()
