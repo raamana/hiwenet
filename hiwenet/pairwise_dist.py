@@ -397,60 +397,6 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
         return edge_weights
 
 
-def compute_histogram(values, edges, use_orig_distr=False):
-    """Computes histogram (density) for a given vector of values."""
-
-    if use_orig_distr:
-        return values
-
-    hist, bin_edges = np.histogram(values, bins=edges, density=True)
-    hist = preprocess_histogram(hist, values, edges)
-
-    return hist
-
-
-def preprocess_histogram(hist, values, edges):
-    """Handles edge-cases and extremely-skewed histograms"""
-
-    # working with extremely skewed histograms
-    if np.count_nonzero(hist) == 0:
-        # all of them above upper bound
-        if np.all(values >= edges[-1]):
-            hist[-1] = 1
-        # all of them below lower bound
-        elif np.all(values <= edges[0]):
-            hist[0] = 1
-
-    return hist
-
-
-def compute_edge_weight(hist_one, hist_two, weight_func):
-    """
-    Computes the edge weight between the two histograms.
-
-    Parameters
-    ----------
-    hist_one : sequence
-        First histogram
-
-    hist_two : sequence
-        Second histogram
-
-    weight_func : callable
-        Identifying the type of distance (or metric) to compute between the pair of histograms.
-        Must be one of the metrics implemented in medpy.metric.histogram, or another valid callable.
-
-    Returns
-    -------
-    edge_value : float
-        Distance or metric between the two histograms
-    """
-
-    edge_value = weight_func(hist_one, hist_two)
-
-    return edge_value
-
-
 def identify_groups(groups):
     """
     To compute number of unique elements in a given membership specification.
