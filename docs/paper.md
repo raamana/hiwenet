@@ -25,9 +25,7 @@ bibliography: paper.bib
 
 # Summary
 
-Network-level analysis of various features, especially if it can be individualized for a single-subject, is proving to be a valuable tool in many applications[@Raamana170381; @evans2013networks; @palaniyappan2015abnormalities; @tijms2012similarity; @xu2017abnormalities; @raamana2015thickness; @lerch2006mapping; @he2007small]. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Input features could be from any modality (fMRI, MEG, EEG, eye-tracking), so long as they can be turned into numbers. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic).
-
-Rough scheme of computation is shown below:
+Network-level analysis of various features, especially if it can be individualized for a single-subject, is proving to be a valuable tool in many applications[@Raamana170381; @evans2013networks; @palaniyappan2015abnormalities; @tijms2012similarity; @xu2017abnormalities; @raamana2015thickness; @lerch2006mapping; @he2007small]. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Input features could be from any modality (fMRI, MEG, EEG, eye-tracking), so long as they can be turned into numbers. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic). A rough scheme of computation is shown in Figure 1.
 
 
 ![illustration](illustration.png)
