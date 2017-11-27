@@ -25,10 +25,13 @@ bibliography: paper.bib
 
 # Summary
 
-Network-level analysis of various features, especially if it can be individualized for a single-subject, is proving to be a valuable tool in many applications[@Raamana170381; @evans2013networks; @palaniyappan2015abnormalities; @tijms2012similarity; @xu2017abnormalities; @raamana2015thickness; @lerch2006mapping; @he2007small]. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic).
+Network-level analysis of various features, especially if it can be individualized for a single-subject, is proving to be a valuable tool in many applications[@Raamana170381; @evans2013networks; @palaniyappan2015abnormalities; @tijms2012similarity; @xu2017abnormalities; @raamana2015thickness; @lerch2006mapping; @he2007small]. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Input features could be from any modality (fMRI, MEG, EEG, eye-tracking), so long as they can be turned into numbers. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic).
 
 Rough scheme of computation is shown below:
+
+
 ![illustration](illustration.png)
+
 
 ## Note on applicability and target audience
 
@@ -43,8 +46,11 @@ The target audience is users of almost all neuroimaging modalities who
 
  - This packages takes in vector of features and their membership labels (denoting which features belong to which groups - alternatively referred to as nodes in a graph), and computes their pair-wise histogram distances, using a chosen method.
  - This package is designed to be domain-agnostic, and hence a generic input format was chosen.
- - This `hiwenet.extract` could be used to extract advance covariance/connectome features in place of [MNE.extract_label_time_course](http://martinos.org/mne/stable/generated/mne.SourceEstimate.html#mne.SourceEstimate.extract_label_time_course) or nilearn.input_data.NiftiLabelsMasker.transform - see [here](http://nilearn.github.io/connectivity/functional_connectomes.html#extracting-signals-on-a-parcellation) and [here](http://nilearn.github.io/modules/generated/nilearn.input_data.NiftiLabelsMasker.html#nilearn.input_data.NiftiLabelsMasker.transform).
+ - This `hiwenet.extract` could be used to extract advanced network-level /connectome features producing feature similar to the following tools from nilearn and MNE, but on a per-subject basis: 
+    - [MNE.extract_label_time_course](http://martinos.org/mne/stable/generated/mne.SourceEstimate.html#mne.SourceEstimate.extract_label_time_course) 
+    - or nilearn.input_data.NiftiLabelsMasker.transform - see [here](http://nilearn.github.io/connectivity/functional_connectomes.html#extracting-signals-on-a-parcellation) and [here](http://nilearn.github.io/modules/generated/nilearn.input_data.NiftiLabelsMasker.html#nilearn.input_data.NiftiLabelsMasker.transform).
  - However, we plan to add interfaces to tools e.g. via a scikit-learn compatible API/interface is also in the works. Stay tuned.
+ - Users also have the ability to input an arbitrary function (outside histogram distance family) to extract networks that is appropriate for their application.
  - Refer to [examples](../examples) directory and the [docs](hiwenet.readthedocs.io) for more detailed and usage examples.
 
 ## requirements
