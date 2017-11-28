@@ -108,4 +108,7 @@ def check_triangle_inequality(method, h1, h2, h3):
     d12 = method(h1, h2)
     d23 = method(h2, h3)
     d13 = method(h1, h3)
-    assert d12 <= d13 + d23
+
+    d13_plus_d23 = np.round(d13 + d23, decimals=10)
+    d12_ = np.round(d12, decimals=10)
+    assert d12_ <= d13_plus_d23
