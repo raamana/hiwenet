@@ -62,5 +62,6 @@ def compute_edge_weight(hist_one, hist_two, weight_func):
 
 
 class HiwenetWarning(Warning):
+    """Exception to indicate the detection of non-fatal use of hiwenet."""
     pass
 
