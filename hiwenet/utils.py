@@ -3,6 +3,8 @@ Common utilities and helpers.
 
 """
 
+__all__ = ['compute_histogram', 'preprocess_histogram', 'compute_edge_weight', 'HiwenetWarning']
+
 import numpy as np
 
 def compute_histogram(values, edges, use_orig_distr=False):
@@ -57,3 +59,8 @@ def compute_edge_weight(hist_one, hist_two, weight_func):
     edge_value = weight_func(hist_one, hist_two)
 
     return edge_value
+
+
+class HiwenetWarning(Warning):
+    pass
+

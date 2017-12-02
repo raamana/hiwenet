@@ -12,10 +12,12 @@ if version_info.major==2 and version_info.minor==7:
     from .pairwise_dist import extract as hiwenet
     from .pairwise_dist import run_cli as CLI
     from .pairwise_dist import metric_list, semi_metric_list
+    from .utils import HiwenetWarning
 elif version_info.major > 2:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
     from hiwenet.pairwise_dist import metric_list, semi_metric_list
+    from hiwenet.utils import HiwenetWarning
 else:
     raise NotImplementedError('hiwenet supports only 2.7.13 or 3+. Upgrate to Python 3+ is recommended.')
 
@@ -82,11 +84,11 @@ def test_more_metrics():
                      use_original_distribution=True)
     assert np.allclose(np.abs(ew), ew_abs, equal_nan=True)
 
-    with raises(ValueError):
+    with warns(HiwenetWarning):
         ew = hiwenet(features, groups, weight_method='diff_medians',
                      use_original_distribution=False)
 
-    with raises(ValueError):
+    with warns(HiwenetWarning):
         ew = hiwenet(features, groups,
                      weight_method='manhattan',
                      use_original_distribution=True)
@@ -272,7 +274,7 @@ def test_input_callable_on_orig_data():
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
 
     # checking for invalid use : histogram metrics can not be applied on orig data (without building histograms)
-    with raises(ValueError):
+    with warns(HiwenetWarning):
         ew = hiwenet(features, groups,
                      weight_method='manhattan',
                      use_original_distribution=True)
