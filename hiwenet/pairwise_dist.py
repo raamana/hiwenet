@@ -15,10 +15,10 @@ from sys import version_info
 if version_info.major==2 and version_info.minor==7:
     import more_metrics
     import non_pairwise
-    from .utils import compute_histogram
+    from .utils import compute_histogram, HiwenetWarning
 elif version_info.major > 2:
     from hiwenet import more_metrics, non_pairwise
-    from hiwenet.utils import compute_histogram
+    from hiwenet.utils import compute_histogram, HiwenetWarning
 else:
     raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
 
@@ -513,14 +513,17 @@ def check_weight_method(weight_method_spec,
             from medpy.metric import histogram as medpy_hist_metrics
             weight_func = getattr(medpy_hist_metrics, weight_method_spec)
             if use_orig_distr:
-                raise ValueError('use_original_distribution must be False when using builtin histogram metrics, '
-                                 'which expect histograms as input.')
+                warnings.warn('use_original_distribution must be False when using builtin histogram metrics, '
+                                 'which expect histograms as input - setting it to False.', HiwenetWarning)
+                use_orig_distr = False
 
         elif weight_method_spec in metrics_on_original_features:
             weight_func = getattr(more_metrics, weight_method_spec)
             if not use_orig_distr:
-                raise ValueError('use_original_distribution must be True when using builtin non-histogram metrics, '
-                                 'which expect original feature values in ROI/node as input.')
+                warnings.warn('use_original_distribution must be True when using builtin non-histogram metrics, '
+                              'which expect original feature values in ROI/node as input '
+                              '- setting it to True.', HiwenetWarning)
+                use_orig_distr = True
 
             if weight_method_spec in symmetric_metrics_on_original_features:
                 print('Chosen metric is symmetric. Ignoring asymmetric=False flag.')
