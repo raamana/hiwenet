@@ -13,6 +13,9 @@ def compute_histogram(values, edges, use_orig_distr=False):
     if use_orig_distr:
         return values
 
+    # ignoring invalid values: Inf and Nan
+    values = check_array(values).compressed()
+
     hist, bin_edges = np.histogram(values, bins=edges, density=True)
     hist = preprocess_histogram(hist, values, edges)
 
@@ -65,3 +68,11 @@ class HiwenetWarning(Warning):
     """Exception to indicate the detection of non-fatal use of hiwenet."""
     pass
 
+
+def check_array(array):
+    "Converts to flattened numpy arrays and ensures its not empty."
+
+    if len(array) < 1:
+        raise ValueError('Input array is empty! Must have atleast 1 element.')
+
+    return np.ma.masked_invalid(array).flatten()

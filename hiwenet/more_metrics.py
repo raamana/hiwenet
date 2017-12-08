@@ -3,18 +3,19 @@ Module implementing additional metrics for edge weights.
 
 """
 
+from sys import version_info
+if version_info.major==2 and version_info.minor==7:
+    from .utils import check_array
+elif version_info.major > 2:
+    from hiwenet.utils import check_array
+else:
+    raise NotImplementedError('hiwenet supports only 2.7 or 3+. '
+                              'Upgrade to Python 3+ is recommended.')
+
 __all__ = ['diff_medians', 'diff_medians_abs',
            'diff_means', 'diff_means_abs']
 
 import numpy as np
-
-def check_array(array):
-    "Converts to flattened numpy arrays and ensures its not empty."
-
-    if len(array) < 1:
-        raise ValueError('Input array is empty! Must have atleast 1 element.')
-
-    return np.ma.masked_invalid(array).flatten()
 
 
 def diff_medians(array_one, array_two):
