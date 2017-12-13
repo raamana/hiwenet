@@ -16,15 +16,12 @@ else:
     raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
 
 
-def relative_to_all(features, groups, edges, weight_func,
+def relative_to_all(features, groups, bin_edges, weight_func,
                     use_orig_distr,
                     group_ids, num_groups,
                     return_networkx_graph, out_weights_path):
     """
-    Computes the difference in medians between two arrays of values.
-
-    Given arrays will be flattened (to 1D array) regardless of dimension,
-        and any bon-finite/NaN values will be ignored.
+    Computes the given function (aka weight or distance) between histogram from each of the groups to a "grand histogram" derived from all groups.
 
     Parameters
     ----------
@@ -44,8 +41,13 @@ def relative_to_all(features, groups, edges, weight_func,
         but this could also be a list of strings of length p, in which case a tuple is returned,
         identifying which weight belongs to which pair of patches.
 
+    bin_edges : list or ndarray
+        Array of bin edges within which to compute the histogram in.
 
-    use_original_distribution : bool, optional
+    weight_func : callable
+        Function to compute the edge weight between groups/nodes.
+
+    use_orig_distr : bool, optional
         When using a user-defined callable, this flag
         1) allows skipping of pre-processing (trimming outliers) and histogram construction,
         2) enables the application of arbitrary callable (user-defined) on the original distributions coming from the two groups/ROIs/nodes directly.
@@ -54,6 +56,19 @@ def relative_to_all(features, groups, edges, weight_func,
 
         This option is valid only when weight_method is a valid callable,
             which must take two inputs (possibly of different lengths) and return a single scalar.
+
+    group_ids : list
+        List of unique group ids to construct the nodes from (must all be present in the `groups` argument)
+
+    num_groups : int
+        Number of unique groups in the `group_ids`
+
+    return_networkx_graph : bool, optional
+        Specifies the need for a networkx graph populated with weights computed. Default: False.
+
+    out_weights_path : str, optional
+        Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format.
+        Default: nothing saved unless instructed.
 
     Returns
     -------
@@ -68,7 +83,7 @@ def relative_to_all(features, groups, edges, weight_func,
     """
 
     # notice the use of all features without regard to group membership
-    hist_whole = compute_histogram(features, edges, use_orig_distr)
+    hist_whole = compute_histogram(features, bin_edges, use_orig_distr)
 
     # to identify the central node capturing distribution from all roi's
     whole_node = 'whole'
@@ -82,7 +97,7 @@ def relative_to_all(features, groups, edges, weight_func,
 
     for src in range(num_groups):
         index_roi = groups == group_ids[src]
-        hist_roi = compute_histogram(features[index_roi], edges, use_orig_distr)
+        hist_roi = compute_histogram(features[index_roi], bin_edges, use_orig_distr)
         edge_value = weight_func(hist_whole, hist_roi)
         if return_networkx_graph:
             graph.add_edge(group_ids[src], whole_node, weight=float(edge_value))

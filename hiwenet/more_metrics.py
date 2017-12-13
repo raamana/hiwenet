@@ -23,7 +23,7 @@ def diff_medians(array_one, array_two):
     Computes the difference in medians between two arrays of values.
 
     Given arrays will be flattened (to 1D array) regardless of dimension,
-        and any bon-finite/NaN values will be ignored.
+        and any non-finite/NaN values will be ignored.
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ def diff_medians_abs(array_one, array_two):
     Computes the absolute (symmetric) difference in medians between two arrays of values.
 
     Given arrays will be flattened (to 1D array) regardless of dimension,
-        and any bon-finite/NaN values will be ignored.
+        and any non-finite/NaN values will be ignored.
 
     Parameters
     ----------
@@ -83,7 +83,7 @@ def diff_means(array_one, array_two):
     Computes the difference in means between two arrays of values.
 
     Given arrays will be flattened (to 1D array) regardless of dimension,
-        and any bon-finite/NaN values will be ignored.
+        and any non-finite/NaN values will be ignored.
 
     Parameters
     ----------
@@ -114,7 +114,7 @@ def diff_means_abs(array_one, array_two):
     Computes the absolute (symmetric) difference in means between two arrays of values.
 
     Given arrays will be flattened (to 1D array) regardless of dimension,
-        and any bon-finite/NaN values will be ignored.
+        and any non-finite/NaN values will be ignored.
 
     Parameters
     ----------
