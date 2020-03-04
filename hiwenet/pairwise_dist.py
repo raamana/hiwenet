@@ -450,11 +450,13 @@ def type_cast_params(num_bins, edge_range_spec, features, groups):
         # possible when called from CLI
         num_bins = np.float(num_bins)
 
-    # rounding it to ensure it is int
-    num_bins = np.rint(num_bins)
-
     if np.isnan(num_bins) or np.isinf(num_bins):
-        raise ValueError('Invalid value for number of bins! Choose a natural number >= {}'.format(minimum_num_bins))
+        raise ValueError('Invalid value for number of bins!'
+                         ' Choose a natural/finite number >= {}'
+                         ''.format(minimum_num_bins))
+
+    # rounding it to ensure it is int
+    num_bins = int(num_bins)
 
     if edge_range_spec is None:
         edge_range = edge_range_spec
