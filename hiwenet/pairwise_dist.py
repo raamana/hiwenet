@@ -20,7 +20,8 @@ elif version_info.major > 2:
     from hiwenet import more_metrics, non_pairwise
     from hiwenet.utils import compute_histogram, HiwenetWarning
 else:
-    raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('hiwenet supports only 2.7 or 3+. '
+                              'Upgrade to Python 3+ is recommended.')
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
@@ -38,7 +39,8 @@ metric_list = [
 
 unknown_prop_list = ['histogram_intersection']
 still_under_dev = ['quadratic_forms']
-similarity_func = ['kullback_leibler', 'cosine_1', 'correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
+similarity_func = ['kullback_leibler', 'cosine_1', 'correlate',
+                   'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
 
 semi_metric_list = [
     'jensen_shannon', 'chi_square',
@@ -63,7 +65,8 @@ default_trim_behaviour = True
 default_return_networkx_graph = False
 default_out_weights_path = None
 
-def compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile, use_orig_distr=False):
+def compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile,
+                      use_orig_distr=False):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
 
     if use_orig_distr:
@@ -282,11 +285,12 @@ def extract(features, groups,
     """
 
     # parameter check
-    features, groups, num_bins, edge_range, group_ids, num_groups, num_links = check_params(
+    features, groups, num_bins, edge_range, group_ids, \
+        num_groups, num_links = check_params(
             features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
 
-    weight_func, use_orig_distr, non_symmetric = check_weight_method(weight_method,
-                                                                     use_original_distribution, asymmetric)
+    weight_func, use_orig_distr, non_symmetric = \
+        check_weight_method(weight_method, use_original_distribution, asymmetric)
 
     # using the same bin edges for all nodes/groups to ensure correspondence
     # NOTE: common bin edges is important for the disances to be any meaningful
@@ -367,7 +371,8 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
             try:
                 edge_value = weight_func(hist_one, hist_two)
                 if return_networkx_graph:
-                    graph.add_edge(group_ids[src], group_ids[dest], weight=float(edge_value))
+                    graph.add_edge(group_ids[src], group_ids[dest],
+                                   weight=float(edge_value))
                 else:
                     edge_weights[src, dest] = edge_value
             except (RuntimeError, RuntimeWarning) as runexc:
@@ -378,12 +383,15 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
                 traceback.print_exc()
                 exceptions_list.append(str(exc))
                 logging.warning('Unable to compute edge weight between '
-                                ' {} and {}. Skipping it.'.format(group_ids[src], group_ids[dest]))
+                                ' {} and {}. Skipping it.'
+                                ''.format(group_ids[src], group_ids[dest]))
 
     error_thresh = 0.05
     if len(exceptions_list) >= error_thresh * num_links:
-        print('All exceptions encountered so far:\n {}'.format('\n'.join(exceptions_list)))
-        raise ValueError('Weights for atleast {:.2f}% of edges could not be computed.'.format(error_thresh * 100))
+        print('All exceptions encountered so far:\n'
+              ' {}'.format('\n'.join(exceptions_list)))
+        raise ValueError('Weights for atleast {:.2f}% of edges could not be computed.'
+                         ''.format(error_thresh * 100))
 
     sys.stdout.write('\n')
 
@@ -403,11 +411,13 @@ def identify_groups(groups):
 
     Parameters
     ----------
-    groups : numpy 1d array of length p, each value specifying which group that particular node belongs to.
-        For examlpe, if you have a cortical thickness values for 1000 vertices belonging to 100 patches,
-        this array could  have numbers 1 to 100 specifying which vertex belongs to which cortical patch.
-        Although grouping with numerical values (contiguous from 1 to num_patches) is strongly recommended for simplicity,
-        this could also be a list of strings of length p.
+    groups : numpy 1d array of length p,
+        each value specifying which group that particular node belongs to.
+        For examlpe, if you have a cortical thickness values for 1000 vertices
+        belonging to 100 patches, this array could  have numbers 1 to 100
+        specifying which vertex belongs to which cortical patch. Although grouping
+        with numerical values (contiguous from 1 to num_patches) is strongly
+        recommended for simplicity, this could also be a list of strings of length p.
 
     Returns
     -------
@@ -420,7 +430,8 @@ def identify_groups(groups):
     num_groups = len(group_ids)
 
     if num_groups < 2:
-        raise ValueError('There must be atleast two nodes or groups in data, for pair-wise edge-weight calculations.')
+        raise ValueError('There must be atleast two nodes or groups in data, '
+                         'for pair-wise edge-weight calculations.')
 
     return group_ids, num_groups
 
@@ -432,11 +443,13 @@ def check_param_ranges(num_bins, num_groups, num_values, trim_outliers, trim_per
         raise ValueError('Too few bins! The number of bins must be >= 5')
 
     if num_values < num_groups:
-        raise ValueError('Insufficient number of values in features (< number of nodes), or invalid membership!')
+        raise ValueError('Insufficient number of values '
+                         'in features (< number of nodes), or invalid membership!')
 
     if trim_outliers:
         if trim_percentile < 0 or trim_percentile >= 100:
-            raise ValueError('percentile of tail values to trim must be in the semi-open interval [0,1).')
+            raise ValueError('percentile of tail values to trim '
+                             'must be in the semi-open interval [0,1).')
     elif num_values < 2:
         raise ValueError('too few features to compute minimum and maximum')
 
@@ -464,14 +477,17 @@ def type_cast_params(num_bins, edge_range_spec, features, groups):
         if len(edge_range_spec) != 2:
             raise ValueError('edge_range must be a tuple of two values: (min, max)')
         if edge_range_spec[0] >= edge_range_spec[1]:
-            raise ValueError('edge_range : min {} is not less than the max {} !'.format(edge_range_spec[0], edge_range_spec[1]))
+            raise ValueError('edge_range : min {} is not less than the max {} !'
+                             ''.format(edge_range_spec[0], edge_range_spec[1]))
         if not np.all(np.isfinite(edge_range_spec)):
-            raise ValueError('Infinite or NaN values in edge range : {}'.format(edge_range_spec))
+            raise ValueError('Infinite or NaN values in edge range : {}'
+                             ''.format(edge_range_spec))
 
         # converting it to tuple to make it immutable
         edge_range = tuple(edge_range_spec)
     else:
-        raise ValueError('Invalid edge range! Must be a tuple of two values (min, max)')
+        raise ValueError('Invalid edge range!'
+                         ' Must be a tuple of two values (min, max)')
 
     if not isinstance(features, np.ndarray):
         features = np.array(features)
@@ -515,16 +531,19 @@ def check_weight_method(weight_method_spec,
             from medpy.metric import histogram as medpy_hist_metrics
             weight_func = getattr(medpy_hist_metrics, weight_method_spec)
             if use_orig_distr:
-                warnings.warn('use_original_distribution must be False when using builtin histogram metrics, '
-                                 'which expect histograms as input - setting it to False.', HiwenetWarning)
+                warnings.warn('use_original_distribution must be False '
+                              'when using builtin histogram metrics, '
+                              'which expect histograms as input'
+                              ' - setting it to False.', HiwenetWarning)
                 use_orig_distr = False
 
         elif weight_method_spec in metrics_on_original_features:
             weight_func = getattr(more_metrics, weight_method_spec)
             if not use_orig_distr:
-                warnings.warn('use_original_distribution must be True when using builtin non-histogram metrics, '
-                              'which expect original feature values in ROI/node as input '
-                              '- setting it to True.', HiwenetWarning)
+                warnings.warn('use_original_distribution must be True'
+                              ' when using builtin non-histogram metrics,'
+                              ' which expect original feature values in ROI/node '
+                              'as input - setting it to True.', HiwenetWarning)
                 use_orig_distr = True
 
             if weight_method_spec in symmetric_metrics_on_original_features:
@@ -532,7 +551,9 @@ def check_weight_method(weight_method_spec,
                 allow_non_symmetric=False
 
         else:
-            raise NotImplementedError('Chosen histogram distance/metric not implemented or invalid.')
+            raise NotImplementedError('Chosen histogram distance/metric {}'
+                                      ' not implemented or invalid.'
+                                      ''.format(weight_method_spec))
 
     elif callable(weight_method_spec):
         # ensure 1) takes two ndarrays
@@ -540,11 +561,12 @@ def check_weight_method(weight_method_spec,
             dummy_weight = weight_method_spec(make_random_histogram(), make_random_histogram())
         except:
             raise TypeError('Error applying given callable on two input arrays.\n'
-                            '{} must accept two arrays and return a single scalar value!')
+                            '{} must accept 2 arrays and return a 1 scalar value!')
         else:
             # and 2) returns only one number
             if not np.isscalar(dummy_weight):
-                raise TypeError('Given callable does not return a single scalar as output.')
+                raise TypeError('Given callable does not return '
+                                'a single scalar as output.')
 
         weight_func = weight_method_spec
     else:
@@ -556,7 +578,8 @@ def check_weight_method(weight_method_spec,
     return weight_func, use_orig_distr, allow_non_symmetric
 
 
-def check_params(features_spec, groups_spec, num_bins, edge_range_spec, trim_outliers, trim_percentile):
+def check_params(features_spec, groups_spec, num_bins, edge_range_spec,
+                 trim_outliers, trim_percentile):
     """Necessary check on values, ranges, and types."""
 
     if isinstance(features_spec, str) and isinstance(groups_spec, str):
@@ -564,7 +587,8 @@ def check_params(features_spec, groups_spec, num_bins, edge_range_spec, trim_out
     else:
         features, groups = features_spec, groups_spec
 
-    num_bins, edge_range, features, groups = type_cast_params(num_bins, edge_range_spec, features, groups)
+    num_bins, edge_range, features, groups = \
+        type_cast_params(num_bins, edge_range_spec, features, groups)
     num_values = len(features)
 
     # memberships
@@ -582,16 +606,20 @@ def run_cli():
     features_path, groups_path, weight_method, num_bins, edge_range, \
     trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = parse_args()
 
-    # TODO add the possibility to process multiple combinations of parameters: diff subjects, diff metrics
+    # TODO add the possibility to process multiple combinations of parameters:
+    #   diff subjects, diff metrics
     # for features_path to be a file containing multiple subjects (one/line)
     # -w could take multiple values kldiv,histint,
     # each line: input_features_path,out_weights_path
 
     features, groups = read_features_and_groups(features_path, groups_path)
 
-    extract(features, groups, weight_method=weight_method, num_bins=num_bins,
-            edge_range=edge_range, trim_outliers=trim_outliers, trim_percentile=trim_percentile,
-            return_networkx_graph=return_networkx_graph, out_weights_path=out_weights_path)
+    extract(features, groups,
+            weight_method=weight_method, num_bins=num_bins,
+            edge_range=edge_range, trim_outliers=trim_outliers,
+            trim_percentile=trim_percentile,
+            return_networkx_graph=return_networkx_graph,
+            out_weights_path=out_weights_path)
 
 
 def read_features_and_groups(features_path, groups_path):
@@ -628,47 +656,64 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="hiwenet")
 
-    parser.add_argument("-f", "--in_features_path", action="store", dest="in_features_path",
+    parser.add_argument("-f", "--in_features_path", action="store",
+                        dest="in_features_path",
                         required=True,
                         help="Abs. path to file containing features for a given subject")
 
     parser.add_argument("-g", "--groups_path", action="store", dest="groups_path",
                         required=True,
-                        help="path to a file containing element-wise membership into groups/nodes/patches.")
+                        help="path to a file containing element-wise membership "
+                             "into groups/nodes/patches.")
 
     parser.add_argument("-w", "--weight_method", action="store", dest="weight_method",
                         default=default_weight_method, required=False,
-                        help="Method used to estimate the weight between the pair of nodes. Default : {}".format(
+                        help="Method used to estimate the weight between "
+                             "the pair of nodes. Default : {}".format(
                             default_weight_method))
 
-    parser.add_argument("-o", "--out_weights_path", action="store", dest="out_weights_path",
+    parser.add_argument("-o", "--out_weights_path", action="store",
+                        dest="out_weights_path",
                         default=default_out_weights_path, required=False,
-                        help="Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format. Default: nothing saved.")
+                        help="Where to save the extracted weight matrix. "
+                             "If networkx output is returned, "
+                             "it would be saved in GraphML format. "
+                             "Default: nothing saved.")
 
     parser.add_argument("-n", "--num_bins", action="store", dest="num_bins",
                         default=default_num_bins, required=False,
-                        help="Number of bins used to construct the histogram. Default : {}".format(default_num_bins))
+                        help="Number of bins used to construct the histogram."
+                             " Default : {}".format(default_num_bins))
 
     parser.add_argument("-r", "--edge_range", action="store", dest="edge_range",
                         default=default_edge_range, required=False,
                         nargs = 2,
-                        help="The range of edges (two finite values) within which to bin the given values e.g. --edge_range 1 6 "
-                             "This can be helpful to ensure correspondence across multiple invocations of hiwenet (for different subjects),"
-                             " in terms of range across all bins as well as individual bin edges. "
-                             "Default : {}, to automatically compute from the given values.".format(default_edge_range))
+                        help="The range of edges (two finite values) within which "
+                             "to bin the given values e.g. --edge_range 1 6 This "
+                             "can be helpful to ensure correspondence across "
+                             "multiple invocations of hiwenet (for different "
+                             "subjects), in terms of range across all bins as well "
+                             "as individual bin edges. Default : {}, "
+                             "to automatically compute from the given "
+                             "values.".format(
+                            default_edge_range))
 
     parser.add_argument("-t", "--trim_outliers", action="store", dest="trim_outliers",
                         default=default_trim_behaviour, required=False,
-                        help="Boolean flag indicating whether to trim the extreme/outlying values. Default True.")
+                        help="Boolean flag indicating whether to trim "
+                             "the extreme/outlying values. Default True.")
 
     parser.add_argument("-p", "--trim_percentile", action="store", dest="trim_percentile",
                         default=default_trim_percentile, required=False,
                         help="Small value specifying the percentile of outliers to trim. "
-                             "Default: {0}%% , must be in open interval (0, 100).".format(default_trim_percentile))
+                             "Default: {0}%% , must be in open interval (0, 100)."
+                             "".format(default_trim_percentile))
 
-    parser.add_argument("-x", "--return_networkx_graph", action="store", dest="return_networkx_graph",
+    parser.add_argument("-x", "--return_networkx_graph", action="store",
+                        dest="return_networkx_graph",
                         default=default_return_networkx_graph, required=False,
-                        help="Boolean flag indicating whether to return a networkx graph populated with weights computed. Default: False")
+                        help="Boolean flag indicating whether to return a networkx "
+                             "graph populated with weights computed. Default: False")
 
     return parser
 
@@ -698,8 +743,9 @@ def parse_args():
     if not os.path.exists(groups_path):
         raise IOError("Given groups file doesn't exist.")
 
-    return in_features_path, groups_path, params.weight_method, params.num_bins, params.edge_range, \
-           params.trim_outliers, params.trim_percentile, params.return_networkx_graph, params.out_weights_path
+    return in_features_path, groups_path, params.weight_method, params.num_bins, \
+           params.edge_range, params.trim_outliers, params.trim_percentile, \
+           params.return_networkx_graph, params.out_weights_path
 
 
 if __name__ == '__main__':
