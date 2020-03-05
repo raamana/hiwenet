@@ -164,3 +164,27 @@ def exp_diff_means_norm_std(array_one, array_two):
     return np.exp( - np.power(diff_means,2) / (2*sum_stdev) )
 
 
+def ranksum_statistic(array_one, array_two):
+    """
+    Computes the Wilcoxon ranksum statistic
+
+    Parameters
+    ----------
+    array_one, array_two : iterable
+        Two arrays of values, possibly of different length.
+
+    Returns
+    -------
+    exp_diff : float
+        scalar value from the Wilcoxon ranksum statistic
+
+    """
+
+    array_one = check_array(array_one)
+    array_two = check_array(array_two)
+
+    from scipy.stats import ranksums
+    stat, p_val = ranksums(array_one, array_two)
+
+    return stat
+
