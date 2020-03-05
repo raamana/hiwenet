@@ -51,7 +51,8 @@ semi_metric_list = [
     'correlate_1']
 
 metrics_on_original_features = ['diff_medians', 'diff_medians_abs',
-                                'diff_means',   'diff_means_abs' ]
+                                'diff_means',   'diff_means_abs',
+                                'exp_diff_means_norm_std', 'ranksum_statistic']
 
 symmetric_metrics_on_original_features = ['diff_medians_abs', 'diff_means_abs']
 

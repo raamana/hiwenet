@@ -14,7 +14,7 @@ else:
 
 __all__ = ['diff_medians', 'diff_medians_abs',
            'diff_means', 'diff_means_abs',
-           'exp_diff_means_norm_std']
+           'exp_diff_means_norm_std', 'ranksum_statistic']
 
 import numpy as np
 
