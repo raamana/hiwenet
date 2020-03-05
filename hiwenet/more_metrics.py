@@ -13,7 +13,8 @@ else:
                               'Upgrade to Python 3+ is recommended.')
 
 __all__ = ['diff_medians', 'diff_medians_abs',
-           'diff_means', 'diff_means_abs']
+           'diff_means', 'diff_means_abs',
+           'exp_diff_means_norm_std']
 
 import numpy as np
 
@@ -136,3 +137,30 @@ def diff_means_abs(array_one, array_two):
     abs_diff_means = np.abs(diff_means(array_one, array_two))
 
     return abs_diff_means
+
+
+def exp_diff_means_norm_std(array_one, array_two):
+    """
+    Implements the following formula to compute the distance between x and y:
+        exp( -( ( mean(x)-mean(y) )^2 ) / (2*(std(x)+std(y))) )
+
+    Parameters
+    ----------
+    array_one, array_two : iterable
+        Two arrays of values, possibly of different length.
+
+    Returns
+    -------
+    exp_diff : float
+        scalar measuring exponentiated diff normed by sum of stdev
+
+    """
+
+    array_one = check_array(array_one)
+    array_two = check_array(array_two)
+    diff_means = np.ma.mean(array_one) - np.ma.mean(array_two)
+    sum_stdev = np.std(array_one) + np.std(array_two)
+
+    return np.exp( - np.power(diff_means,2) / (2*sum_stdev) )
+
+
