@@ -195,6 +195,8 @@ def extract(features, groups,
          - 'diff_means'
          - 'diff_medians_abs'
          - 'diff_means_abs'
+         - 'exp_diff_means_norm_std'
+         - 'ranksum_statistic'
 
          Please note this can lead to adjacency matrices that may not be symmetric
             e.g. difference metric on two scalars is not symmetric).
