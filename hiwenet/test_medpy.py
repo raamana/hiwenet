@@ -4,20 +4,21 @@ Unit and Hypothesis Tests for histogram metrics
 """
 
 import numpy as np
-from hypothesis import given, strategies, assume, Verbosity, note, event
-from hypothesis import settings as hyp_settings
-
+from hypothesis import assume, given, settings as hyp_settings, strategies
 from medpy.metric import histogram
 
-metric_list = ['manhattan', 'minowski', 'euclidean', 'noelle_2', 'noelle_4', 'noelle_5']
+metric_list = ['manhattan', 'minowski', 'euclidean', 'noelle_2', 'noelle_4',
+               'noelle_5']
 metric_list_to_doublecheck = ['cosine_1']
 
 unknown_property = ['histogram_intersection']
-still_under_dev  = ['quadratic_forms']
-similarity_funcs = ['correlate', 'cosine', 'cosine_2', 'cosine_alt', 'fidelity_based']
-semi_metric_list = ['kullback_leibler', 'jensen_shannon', 'chi_square', 'chebyshev', 'chebyshev_neg',
-                    'histogram_intersection_1', 'relative_deviation', 'relative_bin_deviation',
-                    'noelle_1', 'noelle_3', 'correlate_1']
+still_under_dev = ['quadratic_forms']
+similarity_funcs = ['correlate', 'cosine', 'cosine_2', 'cosine_alt',
+                    'fidelity_based']
+semi_metric_list = ['kullback_leibler', 'jensen_shannon', 'chi_square', 'chebyshev',
+                    'chebyshev_neg', 'histogram_intersection_1',
+                    'relative_deviation', 'relative_bin_deviation', 'noelle_1',
+                    'noelle_3', 'correlate_1']
 
 default_feature_dim = 1000
 default_num_bins = 20
@@ -59,7 +60,7 @@ def make_random_histogram(length=default_feature_dim, num_bins=default_num_bins)
 
 
 # Increasing the number of examples to try
-@hyp_settings(max_examples=1000)  # , verbosity=Verbosity.verbose)
+@hyp_settings(max_examples=1000, deadline=None)  # , verbosity=Verbosity.verbose)
 @given(strategies.sampled_from(metric_list),
        strategies.integers(range_feature_dim[0], range_feature_dim[1]),
        strategies.integers(range_num_bins[0], range_num_bins[1]))
