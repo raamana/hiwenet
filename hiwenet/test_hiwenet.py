@@ -8,18 +8,13 @@ import networkx as nx
 import numpy as np
 import scipy.stats
 
-if version_info.major==2 and version_info.minor==7:
-    from .pairwise_dist import extract as hiwenet
-    from .pairwise_dist import run_cli as CLI
-    from .pairwise_dist import metric_list, semi_metric_list
-    from .utils import HiwenetWarning
-elif version_info.major > 2:
+if version_info.major > 2:
     from hiwenet import extract as hiwenet
     from hiwenet import run_cli as CLI
     from hiwenet.pairwise_dist import metric_list, semi_metric_list
     from hiwenet.utils import HiwenetWarning
 else:
-    raise NotImplementedError('hiwenet supports only 2.7.13 or 3+. Upgrate to Python 3+ is recommended.')
+    raise NotImplementedError('hiwenet supports only Python 3 or higher')
 
 list_weight_methods = metric_list + semi_metric_list
 sys.dont_write_bytecode = True
@@ -29,30 +24,36 @@ from pytest import raises, warns, mark
 dimensionality = np.random.randint(500, 2500)
 num_groups = np.random.randint(2, 100)
 
+
 def make_features(dimensionality, num_groups):
-    num_links = int(num_groups*(num_groups-1)/2.0)
+    num_links = int(num_groups * (num_groups - 1) / 2.0)
 
     group_ids_init = np.arange(num_groups)
-    random_indices_into_groups = np.random.randint(0, num_groups, [1, dimensionality])
+    random_indices_into_groups = np.random.randint(0, num_groups,
+                                                   [1, dimensionality])
     groups = group_ids_init[random_indices_into_groups].flatten()
 
     group_ids = np.unique(groups)
     num_groups = len(group_ids)
 
-    features = 10*np.random.random(dimensionality)
+    features = 10 * np.random.random(dimensionality)
 
     return features, groups, group_ids, num_groups
+
 
 features, groups, group_ids, num_groups = make_features(dimensionality, num_groups)
 num_links = np.int64(num_groups * (num_groups - 1) / 2.0)
 # for ix1, gid1 in enumerate(group_ids):
 #     for ix2, gid2 in enumerate(group_ids):
 #         if ix1 != ix2:
-#             dist = cdist(features[groups==gid1],features[groups==gid2], 'euclidean')
+#             dist = cdist(features[groups==gid1],features[groups==gid2],
+#             'euclidean')
 
 cur_dir = os.path.dirname(abspath(__file__))
 
-# the following are mostly usage tests. Refer to test_medpy.py for scientific validity of histogram metrics
+
+# the following are mostly usage tests. Refer to test_medpy.py for scientific
+# validity of histogram metrics
 
 @mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_directed_mat():
@@ -61,21 +62,24 @@ def test_directed_mat():
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
 
     # ensure no self-loops
-    diag_elements = ew.flatten()[::num_groups+1]
+    diag_elements = ew.flatten()[::num_groups + 1]
     assert np.allclose(diag_elements, np.nan, equal_nan=True)
+
 
 @mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_directed_nx():
     graph = hiwenet(features, groups, asymmetric=True, return_networkx_graph=True)
     assert graph.is_directed()
     assert graph.number_of_nodes() == num_groups
-    assert graph.number_of_edges() == 2*num_links
+    assert graph.number_of_edges() == 2 * num_links
+
 
 @mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_dimensions():
     ew = hiwenet(features, groups)
     assert len(ew) == num_groups
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
+
 
 @mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_more_metrics():
@@ -97,28 +101,34 @@ def test_more_metrics():
                      weight_method='manhattan',
                      use_original_distribution=True)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_too_few_groups():
     features, groups, group_ids, num_groups = make_features(100, 1)
     with raises(ValueError):
         ew = hiwenet(features, groups)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_too_few_values():
     features, groups, group_ids, num_groups = make_features(10, 500)
     with raises(ValueError):
-        ew = hiwenet(features[:num_groups-1], groups)
+        ew = hiwenet(features[:num_groups - 1], groups)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_invalid_trim_perc():
-
     with raises(ValueError):
-        ew = hiwenet(features, groups, trim_percentile= -1)
+        ew = hiwenet(features, groups, trim_percentile=-1)
 
     with raises(ValueError):
         ew = hiwenet(features, groups, trim_percentile=101)
 
-def test_invalid_edge_range():
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
+def test_invalid_edge_range():
     with raises(ValueError):
-        ew = hiwenet(features, groups, edge_range= -1)
+        ew = hiwenet(features, groups, edge_range=-1)
 
     with raises(ValueError):
         ew = hiwenet(features, groups, edge_range=[])
@@ -135,22 +145,29 @@ def test_invalid_edge_range():
     with raises(ValueError):
         ew = hiwenet(features, groups, edge_range=(2, 1))
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_invalid_weight_method():
+    with raises(NotImplementedError):
+        ew = hiwenet(features, groups, weight_method='dkjz.jscn')
 
     with raises(NotImplementedError):
-        ew = hiwenet(features, groups, weight_method= 'dkjz.jscn')
+        ew = hiwenet(features, groups, weight_method='somerandomnamenoonewoulduse')
 
-    with raises(NotImplementedError):
-        ew = hiwenet(features, groups, weight_method= 'somerandomnamenoonewoulduse')
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_trim_not_too_few_values():
     with raises(ValueError):
-        ew = hiwenet( [0], [1], trim_outliers = False)
+        ew = hiwenet([0], [1], trim_outliers=False)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_trim_false_too_few_to_calc_range():
     with raises(ValueError):
-        ew = hiwenet( [1], groups, trim_outliers = False)
+        ew = hiwenet([1], groups, trim_outliers=False)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_not_np_arrays():
     with raises(ValueError):
         ew = hiwenet(list(), groups, trim_percentile=101)
@@ -158,6 +175,8 @@ def test_not_np_arrays():
     with raises(ValueError):
         ew = hiwenet(features, list(), trim_percentile=101)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_invalid_nbins():
     with raises(ValueError):
         ew = hiwenet(features, groups, num_bins=np.NaN)
@@ -168,15 +187,19 @@ def test_invalid_nbins():
     with raises(ValueError):
         ew = hiwenet(features, groups, num_bins=2)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_return_nx_graph():
-    nxG = hiwenet(features, groups, return_networkx_graph = True)
+    nxG = hiwenet(features, groups, return_networkx_graph=True)
     assert isinstance(nxG, nx.Graph)
     assert nxG.number_of_nodes() == num_groups
     assert nxG.number_of_edges() == num_links
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_extreme_skewed():
     # Not yet sure what to test for here!!
-    ew = hiwenet(10+np.zeros(dimensionality), groups)
+    ew = hiwenet(10 + np.zeros(dimensionality), groups)
 
 
 # CLI tests
@@ -185,11 +208,13 @@ def test_CLI_run():
     "function to hit the CLI lines."
 
     # first word is the script names (ignored)
-    
+
     featrs_path = abspath(pjoin(cur_dir, '..', 'examples', 'features_1000.txt'))
     groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'groups_1000.txt'))
-    sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
+    sys.argv = shlex.split(
+        'hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     CLI()
+
 
 @mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_CLI_output_matches_API():
@@ -202,35 +227,43 @@ def test_CLI_output_matches_API():
     groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_groups.txt'))
     result_path = abspath(pjoin(cur_dir, '..', 'examples', 'test_result.txt'))
     np.savetxt(featrs_path, features, fmt='%20.9f')
-    np.savetxt(groups_path, groups,  fmt='%d')
+    np.savetxt(groups_path, groups, fmt='%d')
 
     for weight_method in list_weight_methods:
         api_result = hiwenet(features, groups_str, weight_method=weight_method)
 
-        sys.argv = shlex.split('hiwenet -f {} -g {} -o {} -w {}'.format(featrs_path, groups_path, result_path, weight_method))
+        sys.argv = shlex.split(
+            'hiwenet -f {} -g {} -o {} -w {}'.format(featrs_path, groups_path,
+                                                     result_path, weight_method))
         CLI()
         cli_result = np.genfromtxt(result_path, delimiter=',')
 
-        if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3, equal_nan=True)):
-            raise ValueError('CLI results differ from API for {}'.format(weight_method))
+        if not bool(np.allclose(cli_result, api_result, rtol=1e-2, atol=1e-3,
+                                equal_nan=True)):
+            raise ValueError(
+                'CLI results differ from API for {}'.format(weight_method))
 
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_CLI_nonexisting_paths():
     "invalid paths"
 
     featrs_path = abspath(pjoin(cur_dir, '..', 'examples', 'features_1000.txt'))
     groups_path = 'NONEXISTING_groups_1000.txt'
-    sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
+    sys.argv = shlex.split(
+        'hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     with raises(IOError):
         CLI()
 
     featrs_path = 'NONEXISTING_features_1000.txt'
     groups_path = abspath(pjoin(cur_dir, '..', 'examples', 'groups_1000.txt'))
-    sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
+    sys.argv = shlex.split(
+        'hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     with raises(IOError):
         CLI()
 
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_CLI_invalid_args():
     "invalid paths"
 
@@ -240,11 +273,13 @@ def test_CLI_invalid_args():
     with raises(SystemExit):
         CLI()
 
-    sys.argv = shlex.split('hiwenet --invalid_arg_name {0} -f {0} -g {0}'.format(featrs_path))
+    sys.argv = shlex.split(
+        'hiwenet --invalid_arg_name {0} -f {0} -g {0}'.format(featrs_path))
     with raises(SystemExit):
         CLI()
 
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_CLI_too_few_args():
     "testing too few args"
 
@@ -261,30 +296,33 @@ def test_CLI_too_few_args():
         CLI()
 
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_input_callable():
-
-    diff_skew = lambda x, y: abs(scipy.stats.skew(x)-scipy.stats.skew(y))
+    diff_skew = lambda x, y: abs(scipy.stats.skew(x) - scipy.stats.skew(y))
     ew = hiwenet(features, groups, weight_method=diff_skew)
 
     assert len(ew) == num_groups
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
 
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_input_callable_on_orig_data():
-
-    diff_medians = lambda x, y: abs(np.median(x)-np.median(y))
+    diff_medians = lambda x, y: abs(np.median(x) - np.median(y))
     ew = hiwenet(features, groups, weight_method=diff_medians,
                  use_original_distribution=True)
 
     assert len(ew) == num_groups
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
 
-    # checking for invalid use : histogram metrics can not be applied on orig data (without building histograms)
+    # checking for invalid use : histogram metrics can not be applied on orig data
+    # (without building histograms)
     with warns(HiwenetWarning):
         ew = hiwenet(features, groups,
                      weight_method='manhattan',
                      use_original_distribution=True)
 
+
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_relative_to_all():
     ""
 
@@ -304,12 +342,12 @@ def test_relative_to_all():
                       return_networkx_graph=True)
 
         # additional node is the grand node (from all roi's)
-        assert nxg.number_of_nodes() == num_groups+1
+        assert nxg.number_of_nodes() == num_groups + 1
         assert nxg.number_of_edges() == num_groups
 
-        weights_from_nxg = np.array([ nxg[src]['whole']['weight'] for src in group_ids ])
+        weights_from_nxg = np.array(
+                [nxg[src]['whole']['weight'] for src in group_ids])
         assert np.allclose(ew.flatten(), weights_from_nxg)
-
 
 
 # test_directed_nx()
