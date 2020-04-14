@@ -4,13 +4,11 @@ Module implementing additional metrics for edge weights.
 """
 
 from sys import version_info
-if version_info.major==2 and version_info.minor==7:
-    from .utils import check_array
-elif version_info.major > 2:
+if version_info.major > 2:
     from hiwenet.utils import check_array
 else:
-    raise NotImplementedError('hiwenet supports only 2.7 or 3+. '
-                              'Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
+
 
 __all__ = ['diff_medians', 'diff_medians_abs',
            'diff_means', 'diff_means_abs',

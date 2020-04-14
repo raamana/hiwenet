@@ -12,16 +12,11 @@ import numpy as np
 from os.path import join as pjoin, exists as pexists
 from sys import version_info
 
-if version_info.major==2 and version_info.minor==7:
-    import more_metrics
-    import non_pairwise
-    from .utils import compute_histogram, HiwenetWarning
-elif version_info.major > 2:
+if version_info.major > 2:
     from hiwenet import more_metrics, non_pairwise
     from hiwenet.utils import compute_histogram, HiwenetWarning
 else:
-    raise NotImplementedError('hiwenet supports only 2.7 or 3+. '
-                              'Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',

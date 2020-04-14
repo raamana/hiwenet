@@ -8,12 +8,10 @@ __all__ = ['relative_to_all', ]
 import numpy as np
 import networkx as nx
 from sys import version_info
-if version_info.major==2 and version_info.minor==7:
-    from .utils import compute_histogram
-elif version_info.major > 2:
+if version_info.major > 2:
     from hiwenet.utils import compute_histogram
 else:
-    raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
 
 
 def relative_to_all(features, groups, bin_edges, weight_func,
