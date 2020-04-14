@@ -27,7 +27,7 @@ default_num_bins = 20
 range_feature_dim = [10, 10000]
 range_num_bins = [5, 200]
 
-
+@pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def within_tolerance(x, y):
     "Function to indicate acceptable level of tolerance in numerical differences"
 
@@ -82,13 +82,13 @@ def test_math_properties_metric(method_str, feat_dim, num_bins):
     check_nonnegativity(method, h1, h2)
     check_triangle_inequality(method, h1, h2, h3)
 
-
+@pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def check_indiscernibility(method, hist):
     """a must be unique, and a is identical to a if and only if dist(a,a)=0"""
 
     assert within_tolerance(method(hist, hist), 0.0)
 
-
+@pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def check_symmetry(method, h1, h2):
     """symmetry test"""
 
@@ -97,13 +97,13 @@ def check_symmetry(method, h1, h2):
 
     assert within_tolerance(d12, d21)
 
-
+@pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def check_nonnegativity(method, h1, h2):
     """distance between two samples must be >= 0.0"""
 
     assert method(h1, h2) >= 0.0
 
-
+@pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def check_triangle_inequality(method, h1, h2, h3):
     """ Classic test for a metric: dist(a,b) < dist(a,b) + dist(a,c)"""
 

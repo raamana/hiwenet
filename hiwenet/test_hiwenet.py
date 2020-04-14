@@ -1,12 +1,12 @@
-import sys
 import os
 import shlex
+import sys
+from os.path import abspath, join as pjoin
+from sys import version_info
+
+import networkx as nx
 import numpy as np
 import scipy.stats
-import networkx as nx
-import matplotlib.pyplot as plt
-from os.path import join as pjoin, exists as pexists, abspath
-from sys import version_info
 
 if version_info.major==2 and version_info.minor==7:
     from .pairwise_dist import extract as hiwenet
@@ -24,7 +24,7 @@ else:
 list_weight_methods = metric_list + semi_metric_list
 sys.dont_write_bytecode = True
 
-from pytest import raises, warns, set_trace
+from pytest import raises, warns, mark
 
 dimensionality = np.random.randint(500, 2500)
 num_groups = np.random.randint(2, 100)
@@ -54,6 +54,7 @@ cur_dir = os.path.dirname(abspath(__file__))
 
 # the following are mostly usage tests. Refer to test_medpy.py for scientific validity of histogram metrics
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_directed_mat():
     ew = hiwenet(features, groups, asymmetric=True)
     assert len(ew) == num_groups
@@ -63,17 +64,20 @@ def test_directed_mat():
     diag_elements = ew.flatten()[::num_groups+1]
     assert np.allclose(diag_elements, np.nan, equal_nan=True)
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_directed_nx():
     graph = hiwenet(features, groups, asymmetric=True, return_networkx_graph=True)
     assert graph.is_directed()
     assert graph.number_of_nodes() == num_groups
     assert graph.number_of_edges() == 2*num_links
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_dimensions():
     ew = hiwenet(features, groups)
     assert len(ew) == num_groups
     assert ew.shape[0] == num_groups and ew.shape[1] == num_groups
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_more_metrics():
     ew = hiwenet(features, groups, weight_method='diff_medians',
                  use_original_distribution=True)
@@ -176,6 +180,7 @@ def test_extreme_skewed():
 
 
 # CLI tests
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_CLI_run():
     "function to hit the CLI lines."
 
@@ -186,6 +191,7 @@ def test_CLI_run():
     sys.argv = shlex.split('hiwenet -f {} -g {} -n 25'.format(featrs_path, groups_path))
     CLI()
 
+@mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def test_CLI_output_matches_API():
     " Ensuring results from the two interfaces matches within a tolerance"
 
