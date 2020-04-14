@@ -3,7 +3,7 @@ __all__ = ['extract', 'run_cli']
 import argparse
 import os
 import sys
-import collections
+from collections.abc import Sequence
 import traceback
 import warnings
 import logging
@@ -476,7 +476,7 @@ def type_cast_params(num_bins, edge_range_spec, features, groups):
 
     if edge_range_spec is None:
         edge_range = edge_range_spec
-    elif isinstance(edge_range_spec, collections.Sequence):
+    elif isinstance(edge_range_spec, Sequence):
         if len(edge_range_spec) != 2:
             raise ValueError('edge_range must be a tuple of two values: (min, max)')
         if edge_range_spec[0] >= edge_range_spec[1]:
