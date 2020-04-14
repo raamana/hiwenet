@@ -16,7 +16,8 @@ elif version_info.major > 2:
     from hiwenet import more_metrics, non_pairwise
     from hiwenet.pairwise_dist import extract, run_cli
 else:
-    raise NotImplementedError('hiwenet supports only 2.7 or 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('hiwenet supports only 2.7 or 3+. '
+                              'Upgrade to Python 3+ is recommended.')
 
 from ._version import get_versions
 __version__ = get_versions()['version']

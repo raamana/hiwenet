@@ -11,7 +11,7 @@ setup(name='hiwenet',
       author='Pradeep Reddy Raamana',
       author_email='raamana@gmail.com',
       url='https://github.com/raamana/hiwenet',
-      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]), # ['neuropredict'],
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=['numpy', 'pyradigm', 'nibabel', 'networkx', 'medpy'],
       classifiers=[
               'Intended Audience :: Science/Research',
