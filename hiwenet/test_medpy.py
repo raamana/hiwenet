@@ -6,6 +6,7 @@ Unit and Hypothesis Tests for histogram metrics
 import numpy as np
 from hypothesis import assume, given, settings as hyp_settings, strategies
 from medpy.metric import histogram
+import pytest
 
 metric_list = ['manhattan', 'minowski', 'euclidean', 'noelle_2', 'noelle_4',
                'noelle_5']
@@ -59,8 +60,8 @@ def make_random_histogram(length=default_feature_dim, num_bins=default_num_bins)
     return hist
 
 
-# Increasing the number of examples to try
-@hyp_settings(max_examples=1000, deadline=None)  # , verbosity=Verbosity.verbose)
+@pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
+@hyp_settings(max_examples=1000, deadline=None)
 @given(strategies.sampled_from(metric_list),
        strategies.integers(range_feature_dim[0], range_feature_dim[1]),
        strategies.integers(range_num_bins[0], range_num_bins[1]))
