@@ -17,6 +17,36 @@ __all__ = ['diff_medians', 'diff_medians_abs',
 import numpy as np
 
 
+def sorensen_dist(array_one, array_two):
+    """
+    Computes the sorensen distance using the formula
+     dist = \frac{ \Sum{ \abs{p_i - qi} } / \Sum{p_i + q_i} }
+
+    Given arrays will be flattened (to 1D array) regardless of dimension,
+    and any non-finite/NaN values will be ignored.
+
+    Parameters
+    ----------
+    array_one, array_two : iterable
+        Two arrays of values, possibly of different length.
+
+    Returns
+    -------
+    sorensen_dist : float
+        scalar measuring the difference in medians, ignoring NaNs/non-finite values.
+
+    Raises
+    ------
+    ValueError
+        If one or more of the arrays are empty.
+    """
+
+    array_one = check_array(array_one)
+    array_two = check_array(array_two)
+
+    return np.sum(np.abs(array_one - array_two)) / np.sum(array_one + array_two)
+
+
 def diff_medians(array_one, array_two):
     """
     Computes the difference in medians between two arrays of values.
