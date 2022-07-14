@@ -49,6 +49,8 @@ metrics_on_original_features = ['diff_medians', 'diff_medians_abs',
                                 'diff_means',   'diff_means_abs',
                                 'exp_diff_means_norm_std', 'ranksum_statistic']
 
+list_hiwenet_histogram_metrics = np.array(['sorensen_dist', ])
+
 symmetric_metrics_on_original_features = ['diff_medians_abs', 'diff_means_abs']
 
 minimum_num_bins = 5
@@ -170,6 +172,7 @@ def extract(features, groups,
         - 'histogram_intersection_1'
         - 'relative_deviation'
         - 'relative_bin_deviation'
+        - 'sorensen_dist'
         - 'noelle_1'
         - 'noelle_3'
 
@@ -534,6 +537,9 @@ def check_weight_method(weight_method_spec,
                               'which expect histograms as input'
                               ' - setting it to False.', HiwenetWarning)
                 use_orig_distr = False
+
+        elif weight_method_spec in list_hiwenet_histogram_metrics:
+            weight_func = getattr(more_metrics, weight_method_spec)
 
         elif weight_method_spec in metrics_on_original_features:
             weight_func = getattr(more_metrics, weight_method_spec)
