@@ -1,6 +1,0 @@
-numpy
-medpy
-hypothesis
-networkx
-matplotlib
-codecov

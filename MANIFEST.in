@@ -1,2 +1,0 @@
-include versioneer.py
-include hiwenet/_version.py
