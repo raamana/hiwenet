@@ -1,22 +1,22 @@
-__all__ = ['extract', 'run_cli']
+__all__ = [
+    'extract',
+    'extract_with_config',
+    'metric_list',
+    'semi_metric_list',
+    'metrics_on_original_features',
+]
 
-import argparse
-import os
-import sys
 from collections.abc import Sequence
 import traceback
 import warnings
 import logging
 import networkx as nx
 import numpy as np
-from os.path import join as pjoin, exists as pexists
-from sys import version_info
+from os.path import exists as pexists
 
-if version_info.major > 2:
-    from hiwenet import more_metrics, non_pairwise
-    from hiwenet.utils import compute_histogram, HiwenetWarning
-else:
-    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
+from hiwenet import more_metrics, non_pairwise
+from hiwenet.models import ExtractConfig, PreparedInputs, ResolvedMethod
+from hiwenet.utils import precompute_group_histograms, HiwenetWarning
 
 list_medpy_histogram_metrics = np.array([
     'chebyshev', 'chebyshev_neg', 'chi_square',
@@ -60,17 +60,13 @@ default_num_bins = 25
 default_edge_range = None
 default_trim_percentile = 5
 default_trim_behaviour = True
-default_return_networkx_graph = False
-default_out_weights_path = None
-
 def compute_bin_edges(features, num_bins, edge_range, trim_outliers, trim_percentile,
                       use_orig_distr=False):
     "Compute the edges for the histogram bins to keep it the same for all nodes."
 
     if use_orig_distr:
         print('Using original distribution (without histogram) to compute edge weights!')
-        edges=None
-        return edges
+        return None
 
     if edge_range is None:
         if trim_outliers:
@@ -97,8 +93,7 @@ def extract(features, groups,
             use_original_distribution=False,
             relative_to_all=False,
             asymmetric=False,
-            return_networkx_graph=default_return_networkx_graph,
-            out_weights_path=default_out_weights_path):
+            return_networkx_graph=False):
     """
     Extracts the histogram-distance weighted adjacency matrix.
 
@@ -264,10 +259,6 @@ def extract(features, groups,
     return_networkx_graph : bool, optional
         Specifies the need for a networkx graph populated with weights computed. Default: False.
 
-    out_weights_path : str, optional
-        Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format.
-        Default: nothing saved unless instructed.
-
     Returns
     -------
     edge_weights : ndarray
@@ -285,36 +276,75 @@ def extract(features, groups,
 
     """
 
-    # parameter check
-    features, groups, num_bins, edge_range, group_ids, \
-        num_groups, num_links = check_params(
-            features, groups, num_bins, edge_range, trim_outliers, trim_percentile)
+    config = ExtractConfig(
+        weight_method=weight_method,
+        num_bins=num_bins,
+        edge_range=edge_range,
+        trim_outliers=trim_outliers,
+        trim_percentile=trim_percentile,
+        use_original_distribution=use_original_distribution,
+        relative_to_all=relative_to_all,
+        asymmetric=asymmetric,
+        return_networkx_graph=return_networkx_graph,
+    )
+    return extract_with_config(features, groups, config)
 
-    weight_func, use_orig_distr, non_symmetric = \
-        check_weight_method(weight_method, use_original_distribution, asymmetric)
 
-    # using the same bin edges for all nodes/groups to ensure correspondence
-    # NOTE: common bin edges is important for the disances to be any meaningful
-    edges = compute_bin_edges(features, num_bins, edge_range,
-                              trim_outliers, trim_percentile, use_orig_distr)
+def extract_with_config(features, groups, config: ExtractConfig):
+    """Validated extraction entry point using an explicit config model."""
 
-    # handling special
-    if relative_to_all:
-        result = non_pairwise.relative_to_all(features, groups, edges, weight_func,
-                                              use_orig_distr, group_ids, num_groups,
-                                              return_networkx_graph, out_weights_path)
-    else:
-        result = pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
-                                  group_ids, num_groups, num_links,
-                                  non_symmetric, return_networkx_graph, out_weights_path)
+    prepared = check_params(
+        features,
+        groups,
+        config.num_bins,
+        config.edge_range,
+        config.trim_outliers,
+        config.trim_percentile,
+    )
+    method = check_weight_method(
+        config.weight_method,
+        config.use_original_distribution,
+        config.asymmetric,
+    )
 
-    # this can be a networkx graph or numpy array depending on request
-    return result
+    edges = compute_bin_edges(
+        prepared.features,
+        prepared.num_bins,
+        prepared.edge_range,
+        config.trim_outliers,
+        config.trim_percentile,
+        method.use_orig_distr,
+    )
+
+    if config.relative_to_all:
+        return non_pairwise.relative_to_all(
+            prepared.features,
+            prepared.groups,
+            edges,
+            method.weight_func,
+            method.use_orig_distr,
+            prepared.group_ids,
+            prepared.num_groups,
+            config.return_networkx_graph,
+        )
+
+    return pairwise_extract(
+        prepared.features,
+        prepared.groups,
+        edges,
+        method.weight_func,
+        method.use_orig_distr,
+        prepared.group_ids,
+        prepared.num_groups,
+        prepared.num_links,
+        method.non_symmetric,
+        config.return_networkx_graph,
+    )
 
 
 def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
                      group_ids, num_groups, num_links,
-                     non_symmetric, return_networkx_graph, out_weights_path):
+                     non_symmetric, return_networkx_graph):
     """
     Core function to compute the pair-wise histogram distance between all ROIs.
 
@@ -330,8 +360,6 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
     num_links
     non_symmetric
     return_networkx_graph
-    out_weights_path
-
     Returns
     -------
     result : object
@@ -339,21 +367,22 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
 
     """
 
-    # the following will execute only when the pair-wise computation is requested.
     if return_networkx_graph:
         graph = nx.DiGraph() if non_symmetric else nx.Graph()
         graph.add_nodes_from(group_ids)
     else:
         edge_weights = np.full([num_groups, num_groups], np.nan)
 
+    group_histograms = precompute_group_histograms(
+        features,
+        groups,
+        group_ids,
+        edges,
+        use_orig_distr,
+    )
     exceptions_list = list()
     for src in range(num_groups):
-        # primitive progress indicator
-        if np.mod(src + 1, 5) == 0.0:
-            sys.stdout.write('.')
-
-        index1 = groups == group_ids[src]
-        hist_one = compute_histogram(features[index1], edges, use_orig_distr)
+        hist_one = group_histograms[group_ids[src]]
 
         if non_symmetric:
             target_list = range(num_groups)
@@ -362,12 +391,10 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
             target_list = range(src + 1, num_groups, 1)
 
         for dest in target_list:
-            # skipping edge between self
             if src == dest:
                 continue
 
-            index2 = groups == group_ids[dest]
-            hist_two = compute_histogram(features[index2], edges, use_orig_distr)
+            hist_two = group_histograms[group_ids[dest]]
 
             try:
                 edge_value = weight_func(hist_one, hist_two)
@@ -379,7 +406,7 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
             except (RuntimeError, RuntimeWarning) as runexc:
                 # placeholder to ignore some runtime errors (such as medpy's logger issue)
                 print(runexc)
-            except BaseException as exc:
+            except Exception as exc:
                 # numerical instabilities can cause trouble for histogram distance calculations
                 traceback.print_exc()
                 exceptions_list.append(str(exc))
@@ -394,15 +421,9 @@ def pairwise_extract(features, groups, edges, weight_func, use_orig_distr,
         raise ValueError('Weights for atleast {:.2f}% of edges could not be computed.'
                          ''.format(error_thresh * 100))
 
-    sys.stdout.write('\n')
-
     if return_networkx_graph:
-        if out_weights_path is not None:
-            graph.write_graphml(out_weights_path)
         return graph
     else:
-        if out_weights_path is not None:
-            np.savetxt(out_weights_path, edge_weights, delimiter=',', fmt='%.9f')
         return edge_weights
 
 
@@ -462,7 +483,7 @@ def type_cast_params(num_bins, edge_range_spec, features, groups):
 
     if isinstance(num_bins, str):
         # possible when called from CLI
-        num_bins = np.float(num_bins)
+        num_bins = float(num_bins)
 
     if np.isnan(num_bins) or np.isinf(num_bins):
         raise ValueError('Invalid value for number of bins!'
@@ -563,7 +584,7 @@ def check_weight_method(weight_method_spec,
         # ensure 1) takes two ndarrays
         try:
             dummy_weight = weight_method_spec(make_random_histogram(), make_random_histogram())
-        except:
+        except Exception:
             raise TypeError('Error applying given callable on two input arrays.\n'
                             '{} must accept 2 arrays and return a 1 scalar value!')
         else:
@@ -579,7 +600,11 @@ def check_weight_method(weight_method_spec,
                          '\n or a valid callable that accepts that two arrays '
                          'and returns 1 scalar.'.format(list_medpy_histogram_metrics))
 
-    return weight_func, use_orig_distr, allow_non_symmetric
+    return ResolvedMethod(
+        weight_func=weight_func,
+        use_orig_distr=use_orig_distr,
+        non_symmetric=allow_non_symmetric,
+    )
 
 
 def check_params(features_spec, groups_spec, num_bins, edge_range_spec,
@@ -601,29 +626,15 @@ def check_params(features_spec, groups_spec, num_bins, edge_range_spec,
 
     check_param_ranges(num_bins, num_groups, num_values, trim_outliers, trim_percentile)
 
-    return features, groups, num_bins, edge_range, group_ids, num_groups, num_links
-
-
-def run_cli():
-    "Command line interface to hiwenet."
-
-    features_path, groups_path, weight_method, num_bins, edge_range, \
-    trim_outliers, trim_percentile, return_networkx_graph, out_weights_path = parse_args()
-
-    # TODO add the possibility to process multiple combinations of parameters:
-    #   diff subjects, diff metrics
-    # for features_path to be a file containing multiple subjects (one/line)
-    # -w could take multiple values kldiv,histint,
-    # each line: input_features_path,out_weights_path
-
-    features, groups = read_features_and_groups(features_path, groups_path)
-
-    extract(features, groups,
-            weight_method=weight_method, num_bins=num_bins,
-            edge_range=edge_range, trim_outliers=trim_outliers,
-            trim_percentile=trim_percentile,
-            return_networkx_graph=return_networkx_graph,
-            out_weights_path=out_weights_path)
+    return PreparedInputs(
+        features=features,
+        groups=groups,
+        group_ids=group_ids,
+        num_groups=num_groups,
+        num_links=int(num_links),
+        num_bins=num_bins,
+        edge_range=edge_range,
+    )
 
 
 def read_features_and_groups(features_path, groups_path):
@@ -646,111 +657,10 @@ def read_features_and_groups(features_path, groups_path):
         else:
             raise ValueError('groups input must be a file path ')
 
-    except:
+    except Exception:
         raise IOError('error reading the specified features and/or groups.')
 
     if len(features) != len(groups):
         raise ValueError("lengths of features and groups do not match!")
 
     return features, groups
-
-
-def get_parser():
-    "Specifies the arguments and defaults, and returns the parser."
-
-    parser = argparse.ArgumentParser(prog="hiwenet")
-
-    parser.add_argument("-f", "--in_features_path", action="store",
-                        dest="in_features_path",
-                        required=True,
-                        help="Abs. path to file containing features for a given subject")
-
-    parser.add_argument("-g", "--groups_path", action="store", dest="groups_path",
-                        required=True,
-                        help="path to a file containing element-wise membership "
-                             "into groups/nodes/patches.")
-
-    parser.add_argument("-w", "--weight_method", action="store", dest="weight_method",
-                        default=default_weight_method, required=False,
-                        help="Method used to estimate the weight between "
-                             "the pair of nodes. Default : {}".format(
-                            default_weight_method))
-
-    parser.add_argument("-o", "--out_weights_path", action="store",
-                        dest="out_weights_path",
-                        default=default_out_weights_path, required=False,
-                        help="Where to save the extracted weight matrix. "
-                             "If networkx output is returned, "
-                             "it would be saved in GraphML format. "
-                             "Default: nothing saved.")
-
-    parser.add_argument("-n", "--num_bins", action="store", dest="num_bins",
-                        default=default_num_bins, required=False,
-                        help="Number of bins used to construct the histogram."
-                             " Default : {}".format(default_num_bins))
-
-    parser.add_argument("-r", "--edge_range", action="store", dest="edge_range",
-                        default=default_edge_range, required=False,
-                        nargs = 2,
-                        help="The range of edges (two finite values) within which "
-                             "to bin the given values e.g. --edge_range 1 6 This "
-                             "can be helpful to ensure correspondence across "
-                             "multiple invocations of hiwenet (for different "
-                             "subjects), in terms of range across all bins as well "
-                             "as individual bin edges. Default : {}, "
-                             "to automatically compute from the given "
-                             "values.".format(
-                            default_edge_range))
-
-    parser.add_argument("-t", "--trim_outliers", action="store", dest="trim_outliers",
-                        default=default_trim_behaviour, required=False,
-                        help="Boolean flag indicating whether to trim "
-                             "the extreme/outlying values. Default True.")
-
-    parser.add_argument("-p", "--trim_percentile", action="store", dest="trim_percentile",
-                        default=default_trim_percentile, required=False,
-                        help="Small value specifying the percentile of outliers to trim. "
-                             "Default: {0}%% , must be in open interval (0, 100)."
-                             "".format(default_trim_percentile))
-
-    parser.add_argument("-x", "--return_networkx_graph", action="store",
-                        dest="return_networkx_graph",
-                        default=default_return_networkx_graph, required=False,
-                        help="Boolean flag indicating whether to return a networkx "
-                             "graph populated with weights computed. Default: False")
-
-    return parser
-
-
-def parse_args():
-    """Parser/validator for the cmd line args."""
-
-    parser = get_parser()
-
-    if len(sys.argv) < 2:
-        parser.print_help()
-        warnings.warn('Too few arguments!', UserWarning)
-        parser.exit(1)
-
-    # parsing
-    try:
-        params = parser.parse_args()
-    except Exception as exc:
-        print(exc)
-        raise ValueError('Unable to parse command-line arguments.')
-
-    in_features_path = os.path.abspath(params.in_features_path)
-    if not os.path.exists(in_features_path):
-        raise IOError("Given features file doesn't exist.")
-
-    groups_path = os.path.abspath(params.groups_path)
-    if not os.path.exists(groups_path):
-        raise IOError("Given groups file doesn't exist.")
-
-    return in_features_path, groups_path, params.weight_method, params.num_bins, \
-           params.edge_range, params.trim_outliers, params.trim_percentile, \
-           params.return_networkx_graph, params.out_weights_path
-
-
-if __name__ == '__main__':
-    run_cli()
