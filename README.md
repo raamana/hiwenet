@@ -1,26 +1,142 @@
-# Histogram-weighted Networks (hiwenet)
+# Histogram-weighted Networks (`hiwenet`)
 
 [![status](http://joss.theoj.org/papers/df10a3a527fe169447a64c0cc810ff3c/status.svg)](http://joss.theoj.org/papers/df10a3a527fe169447a64c0cc810ff3c)
-[![travis](https://travis-ci.org/raamana/hiwenet.svg?branch=master)](https://travis-ci.org/raamana/hiwenet.svg?branch=master)
-[![Code Health](https://landscape.io/github/raamana/hiwenet/master/landscape.svg?style=flat)](https://landscape.io/github/raamana/hiwenet/master)
-[![codecov](https://codecov.io/gh/raamana/hiwenet/branch/master/graph/badge.svg)](https://codecov.io/gh/raamana/hiwenet)
-[![PyPI version](https://badge.fury.io/py/hiwenet.svg)](https://badge.fury.io/py/hiwenet)
-[![Python versions](https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6-blue.svg)]
 
-Histogram-weighted Networks for Feature Extraction and Advanced Analysis in Neuroscience
+`hiwenet` computes pairwise distances between groups of node-wise feature
+values. Its main role today is as the numerical engine behind
+[graynet](https://github.com/raamana/graynet), but it can also be used
+directly whenever you need histogram-based or original-distribution-based
+distances between groups.
 
-Network-level analysis of various features, esp. if it can be individualized for a single-subject,
- is proving to be a valuable tool in many applications. Ability to extract the networks for a given subject individually on its own, would allow for feature extraction conducive to predictive modeling, unlike group-wise networks which can only be used for descriptive and explanatory purposes. This package extracts single-subject (individualized, or intrinsic) networks from node-wise data by computing the edge weights based on histogram distance between the distributions of values within each node. Individual nodes could be an ROI or a patch or a cube, or any other unit of relevance in your application. This is a great way to take advantage of the full distribution of values available within each node, relative to the simpler use of averages (or another summary statistic) to compare two nodes/ROIs within a given subject.
+Given:
 
-Rough scheme of computation is shown below:
+- a 1D array of feature values
+- a matching 1D array of group labels
+- a distance metric
+
+`hiwenet` returns either:
+
+- a pairwise distance matrix
+- an in-memory NetworkX graph with the same edge weights
+
+This release is intentionally programmatic and does not provide a CLI.
+
 ![illustration](docs/illustration.png)
 
 ## Installation
 
-`pip install -U hiwenet`
+```bash
+pip install -U hiwenet
+```
 
-## Documentation
+## Quick Start
 
-|||
-|--:|---|
-| Docs: |  http://hiwenet.readthedocs.io |
+```python
+import numpy as np
+
+from hiwenet import extract
+
+features = np.array([0.2, 0.1, 0.3, 1.0, 1.2, 0.9])
+groups = np.array([0, 0, 0, 1, 1, 1])
+
+edge_weights = extract(
+    features,
+    groups,
+    weight_method="manhattan",
+)
+```
+
+The default output matches what `graynet` expects: a square NumPy array whose
+upper triangle stores the pairwise edge weights.
+
+## API
+
+### `extract`
+
+`extract()` is the main entry point.
+
+```python
+from hiwenet import extract
+
+edge_weights = extract(
+    features,
+    groups,
+    weight_method="manhattan",
+    num_bins=25,
+    edge_range=None,
+    trim_outliers=True,
+    trim_percentile=5,
+    use_original_distribution=False,
+    relative_to_all=False,
+    asymmetric=False,
+    return_networkx_graph=False,
+)
+```
+
+### `ExtractConfig`
+
+If you prefer a validated configuration object:
+
+```python
+from hiwenet import ExtractConfig, extract_with_config
+
+config = ExtractConfig(
+    weight_method="manhattan",
+    num_bins=25,
+)
+
+edge_weights = extract_with_config(features, groups, config)
+```
+
+## Metrics
+
+`hiwenet` supports both histogram-based distances and distances that operate on
+the original values in each group.
+
+Histogram-based metrics include:
+
+- `manhattan`
+- `euclidean`
+- `chebyshev`
+- `braycurtis`
+- `canberra`
+- `cosine`
+- `correlation`
+- `emd`
+- `kl_divergence`
+- `js_divergence`
+
+Original-distribution metrics include:
+
+- `diff_medians`
+- `diff_medians_abs`
+- `diff_means`
+- `diff_means_abs`
+- `exp_diff_means_norm_std`
+- `ranksum_statistic`
+
+Custom callables are also supported.
+
+## Relative-To-All
+
+`relative_to_all=True` remains available for workflows that compare each group
+against the pooled distribution from all groups.
+
+## Scientific Notes
+
+- Explicit `edge_range` values are useful when you need consistent histogram
+  support across subjects.
+- Built-in non-histogram metrics operate on the original values in each group.
+- Degenerate histogram cases are handled deterministically in this release
+  instead of relying on runtime-warning-driven `NaN` outputs.
+
+## Development
+
+```bash
+pytest -q
+hatch build
+```
+
+## Citation
+
+If `hiwenet` is useful in your work, please cite the JOSS paper linked above.
