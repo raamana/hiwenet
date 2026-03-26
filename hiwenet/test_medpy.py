@@ -29,7 +29,7 @@ range_num_bins = [5, 200]
 
 @pytest.mark.filterwarnings("ignore:.*usage will be deprecated.*:DeprecationWarning")
 def within_tolerance(x, y):
-    "Function to indicate acceptable level of tolerance in numerical differences"
+    """Function to indicate acceptable level of tolerance in numerical differences."""
 
     # as the np.allcose function is not symmetric,
     # this ensurers second arg is larger
@@ -46,7 +46,7 @@ def within_tolerance(x, y):
 
 
 def make_random_histogram(length=default_feature_dim, num_bins=default_num_bins):
-    "Returns a sequence of histogram density values that sum to 1.0"
+    """Returns a sequence of histogram density values that sum to 1.0."""
 
     hist, bin_edges = np.histogram(np.random.random(length),
                                    bins=num_bins, density=True)

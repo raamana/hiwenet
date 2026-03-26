@@ -1,14 +1,6 @@
-"""
-Module implementing additional metrics for edge weights.
+"""Module implementing additional metrics for edge weights."""
 
-"""
-
-from sys import version_info
-if version_info.major > 2:
-    from hiwenet.utils import check_array
-else:
-    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
-
+from hiwenet.utils import check_array
 
 __all__ = ['diff_medians', 'diff_medians_abs',
            'diff_means', 'diff_means_abs',
@@ -20,7 +12,7 @@ import numpy as np
 def sorensen_dist(array_one, array_two):
     """
     Computes the sorensen distance using the formula
-     dist = \frac{ \Sum{ \abs{p_i - qi} } / \Sum{p_i + q_i} }
+     dist = (sum(abs(p_i - q_i))) / (sum(p_i + q_i))
 
     Given arrays will be flattened (to 1D array) regardless of dimension,
     and any non-finite/NaN values will be ignored.
@@ -215,4 +207,3 @@ def ranksum_statistic(array_one, array_two):
     stat, p_val = ranksums(array_one, array_two)
 
     return stat
-
