@@ -7,17 +7,14 @@ __all__ = ['relative_to_all', ]
 
 import numpy as np
 import networkx as nx
-from sys import version_info
-if version_info.major > 2:
-    from hiwenet.utils import compute_histogram
-else:
-    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
+
+from hiwenet.utils import compute_histogram, precompute_group_histograms
 
 
 def relative_to_all(features, groups, bin_edges, weight_func,
                     use_orig_distr,
                     group_ids, num_groups,
-                    return_networkx_graph, out_weights_path):
+                    return_networkx_graph):
     """
     Computes the given function (aka weight or distance) between histogram from each of the groups to a "grand histogram" derived from all groups.
 
@@ -64,10 +61,6 @@ def relative_to_all(features, groups, bin_edges, weight_func,
     return_networkx_graph : bool, optional
         Specifies the need for a networkx graph populated with weights computed. Default: False.
 
-    out_weights_path : str, optional
-        Where to save the extracted weight matrix. If networkx output is returned, it would be saved in GraphML format.
-        Default: nothing saved unless instructed.
-
     Returns
     -------
     distance_vector : ndarray
@@ -93,9 +86,16 @@ def relative_to_all(features, groups, bin_edges, weight_func,
     else:
         edge_weights = np.full([num_groups, 1], np.nan)
 
+    group_histograms = precompute_group_histograms(
+        features,
+        groups,
+        group_ids,
+        bin_edges,
+        use_orig_distr,
+    )
+
     for src in range(num_groups):
-        index_roi = groups == group_ids[src]
-        hist_roi = compute_histogram(features[index_roi], bin_edges, use_orig_distr)
+        hist_roi = group_histograms[group_ids[src]]
         edge_value = weight_func(hist_whole, hist_roi)
         if return_networkx_graph:
             graph.add_edge(group_ids[src], whole_node, weight=float(edge_value))
@@ -103,13 +103,6 @@ def relative_to_all(features, groups, bin_edges, weight_func,
             edge_weights[src] = edge_value
 
     if return_networkx_graph:
-        if out_weights_path is not None:
-            graph.write_graphml(out_weights_path)
         return graph
     else:
-        if out_weights_path is not None:
-            np.savetxt(out_weights_path, edge_weights, delimiter=',', fmt='%.9f')
         return edge_weights
-
-
-
