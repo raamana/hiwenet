@@ -4,16 +4,31 @@
 
 """
 
-__all__ = ['extract', 'pairwise_dist', 'run_cli', 'more_metrics', 'non_pairwise']
+__all__ = [
+    'ExtractConfig',
+    'extract',
+    'extract_with_config',
+    'metric_list',
+    'semi_metric_list',
+    'metrics_on_original_features',
+    'more_metrics',
+    'non_pairwise',
+    '__version__',
+]
 
-from sys import version_info
+from importlib.metadata import PackageNotFoundError, version
 
-if version_info.major > 2:
-    from hiwenet import more_metrics, non_pairwise
-    from hiwenet.pairwise_dist import extract, run_cli
-else:
-    raise NotImplementedError('hiwenet supports only Python 3 or higher!')
+from hiwenet import more_metrics, non_pairwise
+from hiwenet.models import ExtractConfig
+from hiwenet.pairwise_dist import (
+    extract,
+    extract_with_config,
+    metric_list,
+    semi_metric_list,
+    metrics_on_original_features,
+)
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+try:
+    __version__ = version('hiwenet')
+except PackageNotFoundError:
+    __version__ = '0.6.0'
