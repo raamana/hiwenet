@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hiwenet"
+version = "0.6.0"
+description = "Histogram-weighted pairwise distances for node-wise feature data."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Pradeep Reddy Raamana", email = "raamana@gmail.com" },
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "medpy",
+    "networkx",
+    "numpy",
+    "scipy",
+]
+
+[project.optional-dependencies]
+test = [
+    "hypothesis",
+    "pytest",
+]
+docs = [
+    "matplotlib",
+    "nibabel",
+    "sphinx",
+    "sphinx-argparse",
+]
+dev = [
+    "coverage[toml]",
+    "flake8",
+    "hiwenet[docs,test]",
+]
+
+[project.urls]
+Homepage = "https://github.com/raamana/hiwenet"
+
+[tool.hatch.build]
+include = [
+    "hiwenet/**/*.py",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["hiwenet"]
